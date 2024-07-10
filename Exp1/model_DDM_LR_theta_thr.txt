@@ -12,7 +12,7 @@ A[i] <- ifelse(thr[idSub[i]]>ISI[i],0,1) # is ISI is greater than the threshold,
 newSeq[i] = (1-m[i-1])*( A[i]*(newSeq[i-1] + 1) +  # incresing seq 
             (1-A[i])*2 ) +                         # reset seq to 2, that in exp=Q
             1                                      # reset seq to 1 after a Nogo
-exp[i] = 1-((1-Q[i])^(Dseq[i]-1)) # espectative   
+exp[i] = 1-((1-Q[i])^(newseq[i]-1)) # espectative   
 }
 
 for (ii in Trt){

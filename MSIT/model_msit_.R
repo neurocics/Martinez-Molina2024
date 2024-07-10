@@ -188,6 +188,14 @@ resultsM3expRL <- run.jags(model="DDM_LR.txt",
 
 resultsM3expRL2 <- extend.jags(resultsM3expRL, sample=1000, thin=5)
 
+# Run the function that fits the models using JAGS
+resultsM4 <- run.jags(model="DDM_LR_M4.txt",
+                           monitor=monitor, data=dat, n.chains=3, 
+                           inits=c(inits1, inits2, inits3), plots = TRUE,
+                           burnin=1000, sample=1000, thin=5, modules=c("wiener"), 
+                           method=c("parallel"))
+
+
 resultsM3exp0.015
 chains = rbind(resultsM3expRL$mcmc[[1]], resultsM3expRL$mcmc[[2]], resultsM3expRL$mcmc[[3]])
 DIC.M3rl = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
@@ -220,7 +228,7 @@ hist(DATA$LRmean)
 # data for JAS
 dat <- dump.format(list(Wrt=Wrt/1000, nT=Ntotal, Nsubj=Nsubj, idSub = DATA$subN, 
                         Dseq=DATA$seq, pError=DATA$pError,CNF=DATA$CNF,pCNF=DATA$pCNF,
-                        T1=DATA$T1,Trt=Trt, LRi=DATA$LRmean
+                        T1=DATA$T1,Trt=Trt, LRi=DATA$LRmean,Uno=as.numeric(DATA$seq==1)
 ))
 
 
@@ -330,7 +338,7 @@ resultsM3real <- run.jags(model="DDM_LR_exp.txt",
 
 chains = rbind(resultsM3real$mcmc[[1]], resultsM3real$mcmc[[2]], resultsM3real$mcmc[[3]])
 DIC.M3real = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M3real # [1] 3458.836
+DIC.M3real # [1] 
 
 
 
@@ -345,7 +353,7 @@ resultsM5<- run.jags(model="../Exp1/model_DDM_LR_theta.txt",
 
 chains = rbind(resultsM5$mcmc[[1]], resultsM5$mcmc[[2]], resultsM5$mcmc[[3]])
 DIC.M5 = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M5 # [1] 3458.836
+DIC.M5 # [1] 
 
 
 
