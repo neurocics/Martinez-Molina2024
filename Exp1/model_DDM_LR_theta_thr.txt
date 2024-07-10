@@ -2,7 +2,7 @@ model {   # NOTMS
 
 Q[1]=0.25
 seq[1] = 0.25
-newSeq[i]=1 
+newSeq[1]=1 
 m[1]=0 
 
 for (i in 2:nT) { # Trials 

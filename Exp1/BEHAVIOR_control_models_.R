@@ -135,8 +135,16 @@ dat <- dump.format(list(Drt=dataG$rt, nT=Ntotal, Nsubj=Nsubj, idSub = dataG$Dsu,
 
 Ntotal = length(data$rt)
 
+data$ISI = c(0,diff(data$laten))
+
+
+
+
 # data for JASG, all trials, ans index for correct go trials (Trt) 
-datall <- dump.format(list(Drt=data$rt, nT=Ntotal, Nsubj=Nsubj, idSub = data$Dsu, Dseq=data$seq, Dseq_n=data$seq, Uno=data$Uno, pError=data$perror, Trt=Trt,T1=data$T1
+datall <- dump.format(list(Drt=data$rt, nT=Ntotal, Nsubj=Nsubj, 
+                           idSub = data$Dsu, Dseq=data$seq, Dseq_n=data$seq,
+                           Uno=data$Uno, pError=data$perror, 
+                           Trt=Trt,T1=data$T1,ISI=data$ISI
 ))
 
 
@@ -148,7 +156,9 @@ hist(dataG$rt, breaks=50)
 
 # Initialize chains
 inits1 <- dump.format(list(alph=200,ta=15,#bet=0.5,delt=0,mu.Q=0.2, 
-                           mubeta0=10,mubeta1=1,mubeta2=0,mubeta3=0,mubeta4=-1,mubeta5=0,mubeta6=0,mubeta7=1,mubeta8=0,mubeta9=0,mubeta10=-1,mubeta11=0,
+                           mubeta0=10,mubeta1=1,mubeta2=0,mubeta3=0,mubeta4=-1,
+                           mubeta5=0,mubeta6=0,mubeta7=1,mubeta8=0,mubeta9=0,
+                           mubeta10=-1,mubeta11=0,
                            .RNG.name="base::Super-Duper", .RNG.seed=99999 ))
 inits2 <- dump.format(list(alph=300,ta=20,#bet=0.5,delt=0,mu.Q=0.3,  
                            mubeta0=10,mubeta1=0,mubeta2=1,mubeta3=-1,mubeta4=0,mubeta5=1,mubeta6=-1,mubeta7=0,mubeta8=1,mubeta9=-1,mubeta10=0,mubeta11=1,
@@ -158,7 +168,9 @@ inits3 <- dump.format(list(alph=400,ta=10,#bet=0.5,delt=0, mu.Q=0.4,
                            .RNG.name="base::Mersenne-Twister", .RNG.seed=6666 ))
 
 # Tell JAGS which latent variables to monitor
-monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3', 'mubeta4','nor',"ta","bet","delt","mu.LR","deviance")
+monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3', 'mubeta4','nor',
+            "ta","bet","delt","mu.LR","deviance",
+            "th","muthr")
 
 
 resultsl0 <- run.jags(model="model_null_l.txt",
@@ -484,7 +496,7 @@ chains = rbind(results_DDM_Q_LR$mcmc[[1]], results_DDM_Q_LR$mcmc[[2]], results_D
 DIC.M4ddm  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M4ddm 
 
-# 79523.47
+# 79350.75
 
 para_loo <- extend.jags(results_DDM_Q_LR,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
                         burnin=0, summarise=FALSE, method="parallel")
@@ -542,7 +554,29 @@ DIC.M5  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M5
 
 
+para_th_a <- extend.jags(results_DDM_LR_theta,drop.monitor = monitor,add.monitor = c("A"),check.stochastic = FALSE, sample = 100, adapt=0,
+                        burnin=0, summarise=FALSE, method="parallel")
 
+para_loo <- extend.jags(results_DDM_LR_theta,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
+                        burnin=0, summarise=FALSE, method="parallel")
+para_loo_M5 = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
+loo.M5 <- loo(para_loo_M5)
+waic.M5 <- waic(para_loo_M5)
+
+
+##
+
+results_DDM_LR_theta_thr <- run.jags(model="model_DDM_LR_theta_thr.txt",
+                                 monitor=monitor, data=datall, n.chains=3, 
+                                 inits=c(inits1, inits2, inits3), plots = TRUE,
+                                 burnin=10000, sample=1000, thin=10,
+                                 modules=c("wiener"), method=c("parallel"))
+
+results_DDM_LR_theta_thr
+
+chains = rbind(results_DDM_LR_theta_thr$mcmc[[1]], results_DDM_LR_theta_thr$mcmc[[2]], results_DDM_LR_theta_thr$mcmc[[3]])
+DIC.M6  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M6
 
 
 
