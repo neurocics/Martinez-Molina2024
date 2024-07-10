@@ -1,10 +1,12 @@
 model {   # MSIT
 #  
   Q[1]=0.5
+  exp[1]=1-((1-Q[1])^(Dseq[1]-1))  
 #  
   for (i in 2:nT) { # Trials 
     Q[i] =  (1-T1[i])*  (Q[i-1] +    LR[idSub[i]]*(CNF[i-1] - Q[i-1]))   +  
             (T1[i])*    Q[1]  #
+    exp[i] = 1-((1-Q[i])^(Dseq[i]-1))        
   }
 #  
   for (ii in Trt){
