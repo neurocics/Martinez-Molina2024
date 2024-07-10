@@ -10,10 +10,11 @@ library(loo)
 library(lme4)
 library(ggplot2)
 library(patchwork)
+library(rstatix)
 load.module("wiener")
 
-setwd("/Users/pablobilleke/Library/CloudStorage/OneDrive-udd.cl/Working papers/Martinez_theta/OLDs/DATA/MSIT")
-
+#setwd("/Users/pablobilleke/Library/CloudStorage/OneDrive-udd.cl/Working papers/Martinez_theta/OLDs/DATA/MSIT")
+setwd("~/Documents/GitHub/Martinez-Molina2024/MSIT")
 source("../HDIofMCMC.r") 
 
 
@@ -40,17 +41,18 @@ mean(Data_f$p_conf_mayorQ)
 mean(Data_f$p_conf_menorQ)
 
 
-forTest = aggregate(rt ~ p_conf_mayorQ*p_conf_menorQ*subN, FUN=median, data=Data_f[Data_f$p_conf_mayorQ | Data_f$p_conf_menorQ,  ] )
-aggregate(rt ~ p_conf_mayorQ, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ,  ], FUN=mean)
-wilcox.test(rt ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
-wilcox_effsize(rt ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
-t.test(rt ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
 
 forTest = aggregate(acu ~ p_conf_mayorQ*p_conf_menorQ*subN, FUN=mean, data=Data_f[(Data_f$p_conf_mayorQ | Data_f$p_conf_menorQ) & Data_f$est==12 ,  ] )
 aggregate(acu ~ p_conf_mayorQ, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ,  ], FUN=mean)
 wilcox.test(acu ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
 wilcox_effsize(acu ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
 t.test(acu ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
+
+forTest = aggregate(rt ~ p_conf_mayorQ*p_conf_menorQ*subN, FUN=median, data=Data_f[Data_f$p_conf_mayorQ | Data_f$p_conf_menorQ,  ] )
+aggregate(rt ~ p_conf_mayorQ, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ,  ], FUN=mean)
+wilcox.test(rt ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
+wilcox_effsize(rt ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
+t.test(rt ~ p_conf_mayorQ, paired=T, data=forTest[forTest$p_conf_mayorQ | forTest$p_conf_menorQ ,  ])
 
 ##
 
@@ -121,28 +123,12 @@ DATA$pError = c(0,DATA$acu[1:dime[1]-1])
 DATA$pCNF = c(0,DATA$CNF[1:dime[1]-1])
 DATA$T1 = 1-c(0, DATA$subN[1:(dime[1]-1)]==DATA$subN[2:(dime[1])])
 
+DATA$ISI = c(0,diff(DATA$laten))
 # data for JAS
 dat <- dump.format(list(Wrt=Wrt/1000, nT=Ntotal, Nsubj=Nsubj, idSub = DATA$subN, 
                         Dseq=DATA$seq, pError=DATA$pError,CNF=DATA$CNF,pCNF=DATA$pCNF,
-                        T1=DATA$T1,Trt=Trt
+                        T1=DATA$T1,Trt=Trt,ISI=DATA$ISI
 ))
-
-
-#M1 = lmer(rt ~ I(est==12)*seq +  pError + pCNF+   (1 + I(est==12)*seq+  pError + pCNF| subN), data=DATA[DATA$rt>100,])
-#summary(M1)
-
-
-#Q=0.5
-#EXP = 1-((1-Q)^(DATA$seq-1)) # espectative 
-#EXP[EXP==0 & DATA$est==12] = 1
-
-#DATA$exp = EXP
-
-#M2 = lmer(rt ~ I(est==12)*exp +  pError + pCNF+   (1 + I(est==12)*exp+  pError + pCNF| subN), data=DATA[DATA$rt>10,])
-#summary(M2)
-
-#AIC(M1,M2)
-#anova(M1,M2)
 
 
 
@@ -158,7 +144,9 @@ inits1 <- dump.format(list(alph=.030,ta=.006,#bet=0.5,delt=0, mu.Q=0.4,
                            .RNG.name="base::Mersenne-Twister", .RNG.seed=646 ))
 
 # Tell JAGS which latent variables to monitor
-monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3','mubeta4', 'mu.LR',"alph","ta","bet","delt","mu.Q","deviance")
+monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3','mubeta4', 'mu.LR',"alph","ta",
+            "bet","delt","mu.Q","deviance",
+            "th","muthr")
 
 
 
@@ -172,7 +160,7 @@ resultsM1 <- run.jags(model="DDM_ln.txt",
 resultsM1
 chains = rbind(resultsM1$mcmc[[1]], resultsM1$mcmc[[2]], resultsM1$mcmc[[3]])
 DIC.M1 = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M1 #[1] 3511.731 3431.99
+DIC.M1 #[1]  3431.99
 
 
 
@@ -188,7 +176,7 @@ resultsM2 <- run.jags(model="DDM_exp.txt",
 resultsM2
 chains = rbind(resultsM2$mcmc[[1]], resultsM2$mcmc[[2]], resultsM2$mcmc[[3]])
 DIC.M2 = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M2#[1] 3503.686 3506.518
+DIC.M2#[1] 3506.518
 
 
 # Run the function that fits the models using JAGS
@@ -197,6 +185,8 @@ resultsM3expRL <- run.jags(model="DDM_LR.txt",
                     inits=c(inits1, inits2, inits3), plots = TRUE,
                     burnin=1000, sample=1000, thin=5, modules=c("wiener"), 
                     method=c("parallel"))
+
+resultsM3expRL2 <- extend.jags(resultsM3expRL, sample=1000, thin=5)
 
 resultsM3exp0.015
 chains = rbind(resultsM3expRL$mcmc[[1]], resultsM3expRL$mcmc[[2]], resultsM3expRL$mcmc[[3]])
@@ -329,81 +319,49 @@ AABBB
 MP_p + PP+plot_layout(design = layout) +plot_annotation(tag_levels = list(c('C','D')))
 
 
+################  modelo controles 
+
+# Run the function that fits the models using JAGS
+resultsM3real <- run.jags(model="DDM_LR_exp.txt",
+                           monitor=monitor, data=dat, n.chains=3, 
+                           inits=c(inits1, inits2, inits3), plots = TRUE,
+                           burnin=5000, sample=1000, thin=5, modules=c("wiener"), 
+                           method=c("parallel"))
+
+chains = rbind(resultsM3real$mcmc[[1]], resultsM3real$mcmc[[2]], resultsM3real$mcmc[[3]])
+DIC.M3real = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M3real # [1] 3458.836
 
 
 
 
-## buscado correlacion entre betas 1 
 
-b1ps = extend.jags(resultsM3fixLR,drop.monitor = resultsM3fixLR$monitor,add.monitor = c("beta1"),burnin=0, sample=200,adapt = 0)
-b1pss=summary(b1ps)
-load("../TMS_01032023.RData")
+# Run the function that fits the models using JAGS
+resultsM5<- run.jags(model="../Exp1/model_DDM_LR_theta.txt",
+                          monitor=monitor, data=dat, n.chains=3, 
+                          inits=c(inits1, inits2, inits3), plots = TRUE,
+                          burnin=5000, sample=1000, thin=5, modules=c("wiener"), 
+                          method=c("parallel"))
 
-b1ps_gng = extend.jags(results_M3_DDMrlps,drop.monitor = results_M3_DDMrlps$monitor,add.monitor = c("beta1"),burnin=0, sample=200,adapt = 0)
-b1ps_gngs=summary(b1ps_gng)
-##
-
-#find pair for the same subject 
-
-
-su =levels(factor(DATA$subID))
-ind_GNG=numeric()
-ind_MSIT=numeric()
-LRm = numeric()
-LRg = numeric()
-#data$Dsu <- 0 
-n=0;
-for (e  in su) {
-  n=n+1;
-  #data$Dsu =  data$Dsu + (data$Sub==e)*n
-  #DATA$S_a[DATA$Sub==e] = substr(e, 2,10)
-  ind_MSIT[n] = unique(DATA$subN[DATA$subID==e])
-  LRm[n] = unique(DATA$LRmean[DATA$subID==e])
-  ene = unique(data$Dsu2[data$S_a==substr(e, 2,10)])
-  
-  if (length(ene)>0) {
-    ind_GNG[n] = unique(data$Dsu2[data$S_a==substr(e, 2,10)])
-    LRg[n] = unique(data$LRmean [data$S_a==substr(e, 2,10)])
-    }
-}
-
-b1G = b1ps_gngs[ind_GNG,4]
-
-b1M = b1pss[ind_GNG,4]
-b1M = b1M[which(!is.na(b1M))]
-b1G = b1G[which(!is.na(b1G))]
-#b1G = b1G[which(!is.na(b1G))]
-
-cor.test(scale(b1G),scale(b1M))
-cor.test(scale(LRg[!is.na(LRg)]),scale(LRm[!is.na(LRg)]))
-rh_beta(b1ps_gngs[ind_GNG,2],)
-
-
-##  for plot 
-pv2str =  function(pval){
-  if (pval<0.001){
-    AST="***"} else {if (pval<0.01){
-      AST="**"} else {if (pval<0.05){
-        AST="*"}else{AST=""}}
-    }  
-}
-
-RR <- ggplot(data=E, aes(y=ShiftRate, x=Taui))
-RR = RR + 
-  #scale_x_continuous(limits = c(0.39, 0.81))+
-  #geom_bin2d(binwidth=c(0.025, 1/8)) +
-  #scale_fill_gradient(high = "Red" , low="grey90" )  + #low="darkred", 
-  geom_smooth(method=lm) + geom_smooth(se=FALSE,span=2,linetype="dashed") +
-  theme_classic()+
-  theme(legend.position = "none") +
-  geom_point(size=3,color="brown",alpha=0.7)+
-  ylab(TeX("$\\beta_1$ MSIT (z)")) + xlab(TeX("$\\beta_1$ GNG (z)"))  +
-  annotate(geom="text", x=0, y=max(E$ShiftRate)+0.25, label=TeX(paste("$\\rho = ",as.character(round(rh_beta$estimate*100)/100),pv2str(rh_beta$p.value),sep="")),
-           color="black")
-#geom_jitter( position=position_jitter(0.01),size = 3)
+chains = rbind(resultsM5$mcmc[[1]], resultsM5$mcmc[[2]], resultsM5$mcmc[[3]])
+DIC.M5 = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M5 # [1] 3458.836
 
 
 
 
 
 
+
+
+
+# Run the function that fits the models using JAGS
+resultsM6<- run.jags(model="../Exp1/model_DDM_LR_theta_thr.txt",
+                     monitor=monitor, data=dat, n.chains=3, 
+                     inits=c(inits1, inits2, inits3), plots = TRUE,
+                     burnin=5000, sample=1000, thin=5, modules=c("wiener"), 
+                     method=c("parallel"))
+
+chains = rbind(resultsM5$mcmc[[1]], resultsM5$mcmc[[2]], resultsM5$mcmc[[3]])
+DIC.M6 = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M6 # [1] 3458.836
