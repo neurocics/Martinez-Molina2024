@@ -1,0 +1,42 @@
+model {   # NOTMS
+
+for (i in Trt) { # Trials 
+
+Drt[i] ~ dwiener(y[i],ta,0.5,nor) # beta = 0.5 no bias 
+Drtlog[i] <-dlogwiener(Drt[i],y[i],ta,0.5,nor)
+
+y[i] <- beta0[idSub[i]] +    
+        beta1[idSub[i]]*Dseq[i] + 
+        beta2[idSub[i]]*Uno[i]*pError[i] + # pErrorNG 
+		    beta3[idSub[i]]*pError[i]         # pErrorG+pErrorNG  
+        
+	}
+
+for (S in 1:Nsubj){ # Subject 
+
+beta0[S] ~ dnorm(mubeta0, 1/sigmabeta0^2)
+beta1[S] ~ dnorm(mubeta1, 1/sigmabeta1^2)
+beta2[S] ~ dnorm(mubeta2, 1/sigmabeta2^2)
+beta3[S] ~ dnorm(mubeta3, 1/sigmabeta3^2)
+
+}
+
+	
+	# priors
+	
+mubeta0 ~ dnorm(0,0.001)      # 
+sigmabeta0 ~ dunif(0.001,10)
+
+mubeta1 ~ dnorm(0,0.001)       #
+sigmabeta1 ~ dunif(0.001,10)  
+
+mubeta2 ~ dnorm(0,0.001)       #
+sigmabeta2 ~ dunif(0.001,10) 
+
+mubeta3 ~ dnorm(0,0.001)       #
+sigmabeta3 ~ dunif(0.001,10) 
+
+  ta ~ dunif(10,100)
+  nor ~ dnorm(0,001)
+
+}

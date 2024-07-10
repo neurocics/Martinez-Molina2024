@@ -1,0 +1,70 @@
+model {   # NOTMS
+
+Q[1]=0.5
+#LRa[1]=0.2
+
+for (i in 2:nT) { # Trials 
+
+Drt[i] ~ dlnorm(y[i], 1/sigma^2) 
+  
+
+m[i] <- ifelse(Dseq_n[i]<=Dseq_n[i-1],1,0)
+Q[i] =  (1-T1[i])*(Q[i-1] + LRa[i]*(m[i] - Q[i-1]))   +  (T1[i])*0.5  # LR[idSub[i]] = 0.2
+
+seq[i] = 1-((1-Q[i])^(Dseq_n[i]-1)) # espectative   
+  
+  
+y[i] <- beta0[idSub[i]] +    
+        beta1[idSub[i]]*seq[i] + 
+        beta2[idSub[i]]*Uno[i]*pError[i] + # pErrorNG 
+		    #beta3[idSub[i]]*Uno[i] +           # priemro 
+		    beta4[idSub[i]]*pError[i]         # pErrorG+pErrorNG  
+        
+	}
+
+for (S in 1:Nsubj){ # Subject 
+
+beta0[S] ~ dnorm(mubeta0, 1/sigmabeta0^2)
+beta1[S] ~ dnorm(mubeta1, 1/sigmabeta1^2)
+beta2[S] ~ dnorm(mubeta2, 1/sigmabeta2^2)
+#beta3[S] ~ dnorm(mubeta3, 1/sigmabeta3^2)
+beta4[S] ~ dnorm(mubeta4, 1/sigmabeta3^2)
+
+#beta[S] ~ dnorm(mu.beta, 1/sigma.beta^2)T(0.001 , 10)
+
+LR[S] ~ dbeta(a.LR,b.LR) #T(0.01 , 0.99)
+
+}
+
+
+
+	
+	# priors
+	
+mubeta0 ~ dnorm(0,0.001)      # 
+sigmabeta0 ~ dunif(0.001,10)
+
+mubeta1 ~ dnorm(0,0.001)       #
+sigmabeta1 ~ dunif(0.001,10)  
+
+mubeta2 ~ dnorm(0,0.001)       #
+sigmabeta2 ~ dunif(0.001,10) 
+
+#mubeta3 ~ dnorm(0,0.001)       #
+#sigmabeta3 ~ dunif(0.001,10) 
+
+mubeta4 ~ dnorm(0,0.001)       #
+sigmabeta4 ~ dunif(0.001,10) 
+
+sigma ~ dunif(0.001, 10) # prior for the standard deviation 
+
+mu.LR ~ dbeta(1,1)
+k.LR~  dunif(0.001,10000)
+
+a.LR <- mu.LR * k.LR
+b.LR <- (1-mu.LR) * k.LR
+
+#mu.beta ~ dunif(0.001,100) 
+#sigma.beta ~ dunif(0.001,100)
+
+}
