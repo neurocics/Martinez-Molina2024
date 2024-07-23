@@ -1,0 +1,99 @@
+model {# LR provaide in dat
+
+Q[1]=0.25
+Exp[1] = 0.25
+ 
+for (i in 2:nT) { # Trials 
+Q[i] =  (1-T1[i])*(Q[i-1] +   LR[i]*(NGO[i-1] - Q[i-1]))   +  (T1[i])*Q[1]  #LR[idSub[i]]
+Exp[i] = 1-((1-Q[i])^(Dseq[i]-1)) # espectative   
+}
+
+
+
+for (ii in Trt) { # Trials 
+
+
+Drt[ii] ~ dwiener(y[ii],ta,0.5,nor) # beta = 0.5 no bias 
+
+y[ii] <- beta0[idSub[ii]] +    
+        beta1[idSub[ii]]*Exp[ii] + 
+        beta2[idSub[ii]]*Uno[ii]*pError[ii] + # pErrorNG 
+		    beta3[idSub[ii]]*pError[ii] +        # pErrorG+pErrorNG  
+        beta4[idSub[ii]]*Exp[ii]*Dtms[ii]+ 
+        beta5[idSub[ii]]*Exp[ii]*Dtms51[ii]+
+		    beta6[idSub[ii]]*Exp[ii]*Dtms[ii]*DtmsA[ii]+ 
+        beta7[idSub[ii]]*Exp[ii]*Dtms51[ii]*DtmsA[ii]+ 
+        beta8[idSub[ii]]*Dtms[ii] + 
+        beta9[idSub[ii]]*Dtms51[ii] +
+        beta10[idSub[ii]]*DtmsA[ii]
+	}
+
+for (S in 1:Nsubj){ # Subject 
+
+beta0[S] ~ dnorm(mubeta0, 1/sigmabeta0^2)
+beta1[S] ~ dnorm(mubeta1, 1/sigmabeta1^2)
+beta2[S] ~ dnorm(mubeta2, 1/sigmabeta2^2)
+beta3[S] ~ dnorm(mubeta3, 1/sigmabeta3^2)
+beta4[S] ~ dnorm(mubeta4, 1/sigmabeta3^2)
+beta5[S] ~ dnorm(mubeta5, 1/sigmabeta5^2)
+beta6[S] ~ dnorm(mubeta6, 1/sigmabeta6^2)
+beta7[S] ~ dnorm(mubeta7, 1/sigmabeta7^2)
+beta8[S] ~ dnorm(mubeta8, 1/sigmabeta8^2)
+beta9[S] ~ dnorm(mubeta9, 1/sigmabeta9^2)
+beta10[S] ~ dnorm(mubeta10, 1/sigmabeta10^2)
+#LR[S] ~ dbeta(a.LR,b.LR)#T(0.001 , 0.999)
+
+
+
+}
+
+
+
+	
+	# priors
+	
+mubeta0 ~ dnorm(0,0.001)      # 
+sigmabeta0 ~ dunif(0.001,10)
+
+mubeta1 ~ dnorm(0,0.001)       #
+sigmabeta1 ~ dunif(0.001,10)  
+
+mubeta2 ~ dnorm(0,0.001)       #
+sigmabeta2 ~ dunif(0.001,10) 
+
+mubeta3 ~ dnorm(0,0.001)       #
+sigmabeta3 ~ dunif(0.001,10) 
+
+mubeta4 ~ dnorm(0,0.001)       #
+sigmabeta4 ~ dunif(0.001,10) 
+
+mubeta5 ~ dnorm(0,0.001)       #
+sigmabeta5 ~ dunif(0.001,10) 
+
+mubeta6 ~ dnorm(0,0.001)       #
+sigmabeta6 ~ dunif(0.001,10)  
+
+mubeta7 ~ dnorm(0,0.001)       #
+sigmabeta7 ~ dunif(0.001,10) 
+
+mubeta8 ~ dnorm(0,0.001)       #
+sigmabeta8 ~ dunif(0.001,10) 
+
+mubeta9 ~ dnorm(0,0.001)       #
+sigmabeta9 ~ dunif(0.001,10) 
+
+mubeta10 ~ dnorm(0,0.001)       #
+sigmabeta10 ~ dunif(0.001,10) 
+
+  ta ~ dunif(1,200)
+  nor ~ dnorm(0,001)
+  
+ # LR ~ dbeta(1,1)#T(0.001 , 0.999)
+  
+#mu.LR ~ dbeta(1,1) 
+#k.LR~  dunif(0.001,10)
+
+#a.LR <- mu.LR * k.LR
+#b.LR <- (1-mu.LR) * k.LR
+
+}

@@ -11,6 +11,7 @@ load.module("wiener")
 library(lme4)
 library(rstatix)
 library(ggplot2)
+library(coda)
 
 setwd("/Users/pablobilleke/Documents/GitHub/Martinez-Molina2024/Exp1/")
 source("../HDIofMCMC.r") 
@@ -135,9 +136,9 @@ dat <- dump.format(list(Drt=dataG$rt, nT=Ntotal, Nsubj=Nsubj, idSub = dataG$Dsu,
 
 Ntotal = length(data$rt)
 
-data$ISI = c(0,diff(data$laten))
-
-
+data$ISI = abs(c(0,diff(data$laten))) / 1000 # in second
+data$ISI[data$ISI>3]=3 # noi moe that 3 second 
+hist(data$ISI,breaks = 100)
 
 
 # data for JASG, all trials, ans index for correct go trials (Trt) 
@@ -320,6 +321,8 @@ DIC.M2ddm
 
 # 
 # [1] 79581 79357.07[datall]
+para_stat <- extend.jags(results_DDMex,drop.monitor = monitor,add.monitor = monitor, sample = 1000, adapt=0,
+                        burnin=0,  method="parallel")
 
 para_loo <- extend.jags(results_DDMex,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
                         burnin=0, summarise=FALSE, method="parallel")
@@ -513,9 +516,16 @@ results_lgn_Q_LR <- run.jags(model="model_Q_LR_lognorm.txt",
                              burnin=10000, sample=1000, thin=10,
                              modules=c("wiener"), method=c("parallel"))
 
-results_lgn_Q_LR 
+results_lgn_Q_LR
+results_lgn_Q_LR2 <- extend.jags(results_lgn_Q_LR,check.stochastic = FALSE, sample = 1000, adapt=0,
+                                 burnin=1000, summarise=FALSE, method="parallel")
+results_lgn_Q_LR3 <- extend.jags(results_lgn_Q_LR2,check.stochastic = FALSE, sample = 1000, adapt=0,
+                                 drop.monitor = results_lgn_Q_LR2$monitor, add.monitor = monitor,
+                        burnin=1000, summarise=FALSE, method="parallel")
 
-chains = rbind(results_lgn_Q_LR$mcmc[[1]], results_lgn_Q_LR$mcmc[[2]], results_lgn_Q_LR$mcmc[[3]])
+summary(results_lgn_Q_LR3)
+
+chains = rbind(results_lgn_Q_LR2$mcmc[[1]], results_lgn_Q_LR2$mcmc[[2]], results_lgn_Q_LR2$mcmc[[3]])
 DIC.M4lgn  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M4lgn 
 
@@ -527,7 +537,7 @@ para_loo_M4lgn = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]]
 loo.M4lgn <- loo(para_loo_M4lgn)
 waic.M4lgn <- waic(para_loo_M4lgn)
 
-save.image(file="all_behave_noTMS_10072024.RData")
+save.image(file="all_behave_noTMS_15072024.RData")
 
 
 
@@ -553,9 +563,9 @@ chains = rbind(results_DDM_LR_theta$mcmc[[1]], results_DDM_LR_theta$mcmc[[2]], r
 DIC.M5  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M5
 
-
-para_th_a <- extend.jags(results_DDM_LR_theta,drop.monitor = monitor,add.monitor = c("A"),check.stochastic = FALSE, sample = 100, adapt=0,
-                        burnin=0, summarise=FALSE, method="parallel")
+mean(chains[,"th"])
+HDIofMCMC(chains[,"th"])
+mean(chains[,"th"]<0.5)
 
 para_loo <- extend.jags(results_DDM_LR_theta,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
                         burnin=0, summarise=FALSE, method="parallel")
@@ -573,7 +583,10 @@ results_DDM_LR_theta_thr <- run.jags(model="model_DDM_LR_theta_thr.txt",
                                  modules=c("wiener"), method=c("parallel"))
 
 results_DDM_LR_theta_thr
-
+para_th_thr_a <- extend.jags(results_DDM_LR_theta_thr,drop.monitor = monitor,add.monitor = monitor,check.stochastic = FALSE, sample = 1000, adapt=0,
+                         burnin=0, summarise=FALSE, method="parallel")
+ 
+summary(para_th_thr_a)
 chains = rbind(results_DDM_LR_theta_thr$mcmc[[1]], results_DDM_LR_theta_thr$mcmc[[2]], results_DDM_LR_theta_thr$mcmc[[3]])
 DIC.M6  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M6
@@ -582,12 +595,39 @@ DIC.M6
 
 ##
 
+# Tell JAGS which latent variables to monitor
+monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3', 'mubeta4',
+            'nor',"ta","bet","delt","mu.LR",
+            'muthrb0','muthrb1',
+            "deviance")
+
+
+##
+
+results_DDM_LR_theta_thr_logit <- run.jags(model="model_DDM_LR_theta_thr_logit.txt",
+                                     monitor=monitor, data=datall, n.chains=3, 
+                                     inits=c(inits1, inits2, inits3), plots = TRUE,
+                                     burnin=10000, sample=1000, thin=10,
+                                     modules=c("wiener"), method=c("parallel"))
+
+plot(results_DDM_LR_theta_thr_logit) 
+
+para_th_thr_a <- extend.jags(results_DDM_LR_theta_thr,drop.monitor = monitor,add.monitor = monitor,check.stochastic = FALSE, sample = 1000, adapt=0,
+                             burnin=0, summarise=FALSE, method="parallel")
+
+summary(para_th_thr_a)
+chains = rbind(results_DDM_LR_theta_thr$mcmc[[1]], results_DDM_LR_theta_thr$mcmc[[2]], results_DDM_LR_theta_thr$mcmc[[3]])
+DIC.M6l  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M6l
+
+
 
 # Model comparison
 DICS=c(DIC.M0lgn, DIC.M1lgn,DIC.M2lgn,DIC.M3lgn,DIC.M4lgn ,
        DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm,DIC.M4ddm)
-#DICS=c(loo.M0lgn$estimates[3], loo.M1lgn$estimates[3],loo.M2lgn$estimates[3],loo.M3lgn$estimates[3] ,
-#  loo.M0ddm$estimates[3], loo.M1ddm$estimates[3],loo.M2ddm$estimates[3],loo.M3ddm$estimates[3])
+
+DICS=c(loo.M0lgn$estimates[3], loo.M1lgn$estimates[3],loo.M2lgn$estimates[3],loo.M3lgn$estimates[3] ,loo.M4lgn$estimates[3] ,
+         loo.M0ddm$estimates[3], loo.M1ddm$estimates[3],loo.M2ddm$estimates[3],loo.M3ddm$estimates[3],loo.M4ddm$estimates[3])
 
 Link=factor(c("1:Lgn","1:Lgn","1:Lgn","1:Lgn","1:Lgn",
               "2:DDM","2:DDM","2:DDM","2:DDM","2:DDM"))
@@ -616,6 +656,128 @@ CB
 
 MP_p + PD+ DIC+plot_layout(design = layout) +plot_annotation(tag_levels = list(c('A','C','B')))
 
-#save.image(file="all_behave_noTMS_07062023.RData")
+#save.image(file="Model0_1_2_3_4_5_.RData")
 
+###. valores predicho del modle M3ddm
+#muestras <- coda.samples(results_DDM_LR,variable.names = c("y","ta","nor"))
+
+
+para_muestars <- extend.jags(results_DDM_LR,
+                             drop.monitor = results_DDM_LR$monitor,
+                             add.monitor = c("y","ta","nor"),
+                             check.stochastic = FALSE, sample = 100, adapt=0,
+                             burnin=0, summarise=FALSE, method="parallel")
+
+
+muestras <- as.mcmc.list(para_muestars)
+muestras_matriz <- as.matrix(muestras)
+# 300 7234
+
+muestras_matriz_par <- muestras_matriz[,7233:7234]
+muestras_matriz_par_m =colMeans(muestras_matriz_par) 
+y_new = colMeans(muestras_matriz[,1:7232])  
+y_new_all = muestras_matriz[,1:7232] 
+library(brms)
+
+#RTpre = numeric()
+for (i in length(RTpre):7232){
+d <- rwiener(n = 1, alpha = y_newall[i], tau = muestras_matriz_par_m[1] ,
+        beta = 0.5, delta = muestras_matriz_par_m[2])
+RTpre[i] = as.numeric(d[1])
+}
+
+
+
+RTpre2 = numeric()
+for (i in 1:7232){
+  # i = 1
+  np <- sample(1:300, 1, replace = TRUE)
+  d <- rwiener(n = 1, alpha = y_new_all[np,i], tau = muestras_matriz_par[np,1] ,
+               beta = 0.5, delta = muestras_matriz_par[np,2])
+  RTpre2[i] = as.numeric(d[1])
+}
+
+
+
+
+
+
+
+
+
+
+RTreal = data$rt[Trt]
+
+data2 <- data.frame(
+  Value = c(RTpre, RTreal),
+  Data = rep(c("Predicted", "Observed"), each = length(RTpre2))
+)
+
+GA <- ggplot(data2, aes(x = Value, fill = Data)) +
+  geom_histogram(position = "identity", alpha = 0.5, bins = 80) +
+  labs(title = "RT Comparison",
+       x = "Reaction Time (ms)",
+       y = "Frequency") +
+  theme_minimal() +
+ # scale_fill_manual(values = c("Predicted" = "blue", "Observed" = "red")) +
+  theme(legend.position = c(0.7, 0.85),  # Ajustar la posición de la leyenda (x, y) dentro del área del gráfico
+        #legend.background = element_rect(fill = alpha('white', 0.5)),
+        legend.background = element_blank(),  # Eliminar el fondo de la leyenda
+        legend.key = element_blank())  # Hacer el fondo de la leyenda semi-transparente
+
+
+
+# Calcular cuartiles
+observed_quantiles <- quantile(RTreal, probs = seq(0.1,0.9,by=0.1))
+predicted_quantiles <- quantile(RTpre, probs = seq(0.1,0.9,by=0.1))
+
+# Crear un data frame para los cuartiles
+quartile_data <- data.frame(
+  Deciles = factor(c("p1", "p2","p3", "p4", "M","p6", "p7","p8", "p9"), 
+                    levels = c("p1", "p2","p3", "p4", "M","p6", "p7","p8", "p9")),
+  Observed = observed_quantiles,
+  Predicted = predicted_quantiles
+)
+
+
+
+# Crear el gráfico
+GC= ggplot(quartile_data, aes(x = Deciles)) +
+  geom_point(aes(y = Observed, color = "Observed"), size = 4) +
+  geom_point(aes(y = Predicted, color = "Predicted"), size = 4) +
+  geom_line(aes(y = Observed, group = 1, color = "Observed")) +
+  geom_line(aes(y = Predicted, group = 1, color = "Predicted")) +
+  labs(title = "Quantile Plot",
+       y = "Reaction Time (ms)",
+       color = "Data") +
+  theme_minimal() +
+  theme(legend.position = c(0.4, 0.85),  # Ajustar la posición de la leyenda (x, y) dentro del área del gráfico
+        #legend.background = element_rect(fill = alpha('white', 0.5)),
+        legend.background = element_blank(),  # Eliminar el fondo de la leyenda
+        legend.key = element_blank()) 
+  #theme_minimal()
+
+GB = ggplot(qqplot_data, aes(x = Observed, y = Predicted)) +
+  geom_point(color = "black", alpha = 0.05) +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(100, 900) +  # Limitar el eje x
+  ylim(100, 900) +  # Limitar el eje y
+  labs(title = "QQ Plot",
+       x = "Observed Quantiles",
+       y = "Predicted Quantiles") +
+  theme_minimal()
+library(latex2exp)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(ggcharts)
+library(patchwork)
+
+layout <- "
+AABBCC
+"
+#p1 + p2 + p3 + p4 + 
+#  plot_layout(design = layout)
+
+GA + GC + GB+  plot_layout(design = layout) +plot_annotation(tag_levels = list(c('A','B','C')))
 
