@@ -13,7 +13,7 @@ library(rstatix)
 library(ggplot2)
 library(coda)
 
-setwd("/Users/pablobilleke/Documents/GitHub/Martinez-Molina2024/Exp1/")
+setwd("~/Documents/GitHub/Martinez-Molina2024/Exp1/")
 source("../HDIofMCMC.r") 
 
 pv2str =  function(pval){
@@ -27,6 +27,7 @@ pv2str =  function(pval){
 
 
 # Draw random samples with JAGS
+# in COR.txt all de trails of behavioral experiments 
 data <- read.table("COR.txt", header=TRUE,sep="\t")
 
 names(data)
@@ -89,12 +90,6 @@ MP_p <- ggplot(Dm, aes(x=m2, y=rt, col=m2)) +
 
 
 
-
-
-
-
-
-
 su =levels(as.factor(data$SU))
 data$Dsu <- 0 
 n=0;
@@ -135,10 +130,6 @@ dat <- dump.format(list(Drt=dataG$rt, nT=Ntotal, Nsubj=Nsubj, idSub = dataG$Dsu,
                         ))
 
 Ntotal = length(data$rt)
-
-data$ISI = abs(c(0,diff(data$laten))) / 1000 # in second
-data$ISI[data$ISI>3]=3 # noi moe that 3 second 
-hist(data$ISI,breaks = 100)
 
 
 # data for JASG, all trials, ans index for correct go trials (Trt) 
@@ -357,20 +348,6 @@ loo.M3ddm <- loo(para_loo_M3ddm)
 waic.M3ddm <- waic(para_loo_M3ddm)
 
 
-# Run the function that fits the models using JAGS
-results_DDM_LR_c <- run.jags(model="model_DDM_LR_c.txt",
-                           monitor=monitor, data=datall, n.chains=3, 
-                           inits=c(inits1, inits2, inits3), plots = TRUE,
-                           burnin=10000, sample=1000, thin=10,
-                           modules=c("wiener"), method=c("parallel"))
-
-results_DDM_LR_c 
-
-chains = rbind(results_DDM_LR_c$mcmc[[1]], results_DDM_LR_c$mcmc[[2]], results_DDM_LR_c$mcmc[[3]])
-DIC.M3ddm_c = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M3ddm_c
-#  79330.65
-
 para_loo <- extend.jags(results_DDM_LR_c,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
                         burnin=0, summarise=FALSE, method="parallel")
 para_loo_M3ddm_c = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
@@ -378,16 +355,72 @@ loo.M3ddm_c <- loo(para_loo_M3ddm_c)
 waic.M3ddm_c <- waic(para_loo_M3ddm_c)
 
 
-# Compare the two models
-loo_compare(loo.M1ddm,loo.M1lgn,loo.M2ddm,loo.M2lgn)
 
-loo_compare(loo.M3ddm,loo.M3lgn,loo.M0lgn,loo.M0ddm,loo.M1lgn,loo.M1ddm,loo.M2lgn,loo.M2ddm)*2
+# M4 is the  paper's model M3(Q)
+# Run the function that fits the models using JAGS
+results_DDM_Q_LR <- run.jags(model="model_Q_LR_DDM.txt",
+                             monitor=monitor, data=datall, n.chains=3, 
+                             inits=c(inits1, inits2, inits3), plots = TRUE,
+                             burnin=10000, sample=1000, thin=10,
+                             modules=c("wiener"), method=c("parallel"))
+
+results_DDM_Q_LR 
+
+chains = rbind(results_DDM_Q_LR$mcmc[[1]], results_DDM_Q_LR$mcmc[[2]], results_DDM_Q_LR$mcmc[[3]])
+DIC.M4ddm  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M4ddm 
+
+# 79350.75
+
+para_loo <- extend.jags(results_DDM_Q_LR,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
+                        burnin=0, summarise=FALSE, method="parallel")
+para_loo_M4ddm = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
+loo.M4ddm <- loo(para_loo_M4ddm)
+waic.M4ddm <- waic(para_loo_M4ddm)
 
 
-c(DIC.M3ddm,DIC.M3lgn,DIC.M0lgn,DIC.M0ddm,DIC.M1lgn,DIC.M1ddm,DIC.M2lgn,DIC.M2ddm)-DIC.M3ddm
+#
+# Run the function that fits the models using JAGS
+results_lgn_Q_LR <- run.jags(model="model_Q_LR_lognorm.txt",
+                             monitor=monitor, data=datall, n.chains=3, 
+                             inits=c(inits1, inits2, inits3), plots = TRUE,
+                             burnin=10000, sample=1000, thin=10,
+                             modules=c("wiener"), method=c("parallel"))
+
+results_lgn_Q_LR ## ensure adequate/good convergence of the chains
+results_lgn_Q_LR2 <- extend.jags(results_lgn_Q_LR,check.stochastic = FALSE, sample = 1000, adapt=0,
+                                 burnin=1000, summarise=FALSE, method="parallel")
+results_lgn_Q_LR3 <- extend.jags(results_lgn_Q_LR2,check.stochastic = FALSE, sample = 1000, adapt=0,
+                                 drop.monitor = results_lgn_Q_LR2$monitor, add.monitor = monitor,
+                                 burnin=1000, summarise=FALSE, method="parallel")
+results_lgn_Q_LR4 <- extend.jags(results_lgn_Q_LR3,check.stochastic = FALSE, sample = 1000, adapt=0,thin=10,
+                                 drop.monitor = results_lgn_Q_LR2$monitor, add.monitor = monitor,
+                                 burnin=10000, summarise=FALSE, method="parallel")
+results_lgn_Q_LR5 <- extend.jags(results_lgn_Q_LR4,check.stochastic = FALSE, sample = 1000, adapt=0,thin=20,
+                                 drop.monitor = results_lgn_Q_LR4$monitor, add.monitor = monitor,
+                                 burnin=0, summarise=FALSE, method="parallel")
+summary(results_lgn_Q_LR5)
+
+chains = rbind(results_lgn_Q_LR5$mcmc[[1]], results_lgn_Q_LR5$mcmc[[2]], results_lgn_Q_LR5$mcmc[[3]])
+DIC.M4lgn  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M4lgn 
+
+# 
+
+para_loo <- extend.jags(results_lgn_Q_LR5,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
+                        burnin=0, summarise=FALSE, method="parallel")
+para_loo_M4lgn = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
+loo.M4lgn <- loo(para_loo_M4lgn)
+waic.M4lgn <- waic(para_loo_M4lgn)
+
+#save.image(file="all_behave_noTMS_15072024.RData")
 
 
-save.image(file="all_behave_noTMS_10072024.RData")
+
+
+
+
+#save.image(file="all_behave_noTMS_10072024.RData")
 
 ##3  Figure 
 chains = rbind(results_DDM_LR $mcmc[[1]], results_DDM_LR $mcmc[[2]], results_DDM_LR $mcmc[[3]])
@@ -459,19 +492,32 @@ PD = ggplot(plotData, aes(y=cadena, x = beta, color=beta, fill = beta)) +
   annotate(geom="text", y=0.06, x=1.3, label=pv2str(pexp),
            color="black") 
 
-
 # Model comparison
-DICS=c(DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm, DIC.M0lgn, DIC.M1lgn,DIC.M2lgn,DIC.M3lgn ) 
-Link=factor(c("2:DDM","2:DDM","2:DDM","2:DDM","1:Lgn","1:Lgn","1:Lgn","1:Lgn"))
-df <- data.frame(modelos = c("M0", "M1", "M2","M3"),
+DICS=c(loo.M0ddm$estimates[3,1],#DIC.M0lgn, 
+       loo.M1ddm$estimates[3,1],#
+       loo.M2ddm$estimates[3,1],#
+       loo.M3ddm$estimates[3,1],#
+       loo.M4ddm$estimates[3,1],#
+       DIC.M0ddm, 
+       DIC.M1ddm,
+       DIC.M2ddm,
+       DIC.M3ddm,
+       DIC.M4ddm)
+#DICS=c(loo.M0lgn$estimates[3], loo.M1lgn$estimates[3],loo.M2lgn$estimates[3],loo.M3lgn$estimates[3] ,
+#  loo.M0ddm$estimates[3], loo.M1ddm$estimates[3],loo.M2ddm$estimates[3],loo.M3ddm$estimates[3])
+
+Link=factor(c("LOOIC","LOOIC","LOOIC","LOOIC","LOOIC",
+              "DIC","DIC","DIC","DIC","DIC"))
+df <- data.frame(modelos = c("M0", "M1", "M2","M3(seq)","M3(Q)","M0", "M1", "M2","M3(seq)","M3(Q)"),
                  Link = Link,
-                 dics = DICS- min(DICS)+1)
+                 dics = c(DICS[1:5]- min(DICS[1:5])+1  ,DICS[6:10]- min(DICS[6:10])+1  ) )
 DIC = ggplot(df) +
   geom_col(aes(x=modelos, y=dics,fill=Link),position = position_dodge())+
-  theme(legend.position = c(0.7, 0.9))+
-  ylab("DIC difference")+
-  xlab("Models ")
-
+  theme(legend.position=c(0.7, 0.9)) +
+  labs(#title="Model Comparison by Metric", 
+    x="Models", 
+    y="Adjustment Difference", 
+    fill="Metric")
 
 
 layout <- "
@@ -483,74 +529,11 @@ CB
 
 MP_p + PD+ DIC+plot_layout(design = layout) +plot_annotation(tag_levels = list(c('C','E','D')))
 
-save.image(file="all_behave_noTMS_07062023.RData")
 
 
 
 ####.  control paper v2 
-
-
-# Run the function that fits the models using JAGS
-results_DDM_Q_LR <- run.jags(model="model_Q_LR_DDM.txt",
-                           monitor=monitor, data=datall, n.chains=3, 
-                           inits=c(inits1, inits2, inits3), plots = TRUE,
-                           burnin=10000, sample=1000, thin=10,
-                           modules=c("wiener"), method=c("parallel"))
-
-results_DDM_Q_LR 
-
-chains = rbind(results_DDM_Q_LR$mcmc[[1]], results_DDM_Q_LR$mcmc[[2]], results_DDM_Q_LR$mcmc[[3]])
-DIC.M4ddm  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M4ddm 
-
-# 79350.75
-
-para_loo <- extend.jags(results_DDM_Q_LR,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
-                        burnin=0, summarise=FALSE, method="parallel")
-para_loo_M4ddm = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
-loo.M4ddm <- loo(para_loo_M4ddm)
-waic.M4ddm <- waic(para_loo_M4ddm)
-
-
-#
-# Run the function that fits the models using JAGS
-results_lgn_Q_LR <- run.jags(model="model_Q_LR_lognorm.txt",
-                             monitor=monitor, data=datall, n.chains=3, 
-                             inits=c(inits1, inits2, inits3), plots = TRUE,
-                             burnin=10000, sample=1000, thin=10,
-                             modules=c("wiener"), method=c("parallel"))
-
-results_lgn_Q_LR
-results_lgn_Q_LR2 <- extend.jags(results_lgn_Q_LR,check.stochastic = FALSE, sample = 1000, adapt=0,
-                                 burnin=1000, summarise=FALSE, method="parallel")
-results_lgn_Q_LR3 <- extend.jags(results_lgn_Q_LR2,check.stochastic = FALSE, sample = 1000, adapt=0,
-                                 drop.monitor = results_lgn_Q_LR2$monitor, add.monitor = monitor,
-                        burnin=1000, summarise=FALSE, method="parallel")
-results_lgn_Q_LR4 <- extend.jags(results_lgn_Q_LR3,check.stochastic = FALSE, sample = 1000, adapt=0,thin=10,
-                                 drop.monitor = results_lgn_Q_LR2$monitor, add.monitor = monitor,
-                                 burnin=10000, summarise=FALSE, method="parallel")
-results_lgn_Q_LR5 <- extend.jags(results_lgn_Q_LR4,check.stochastic = FALSE, sample = 1000, adapt=0,thin=20,
-                                 drop.monitor = results_lgn_Q_LR4$monitor, add.monitor = monitor,
-                                 burnin=0, summarise=FALSE, method="parallel")
-summary(results_lgn_Q_LR5)
-
-chains = rbind(results_lgn_Q_LR5$mcmc[[1]], results_lgn_Q_LR5$mcmc[[2]], results_lgn_Q_LR5$mcmc[[3]])
-DIC.M4lgn  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M4lgn 
-
-# 
-
-para_loo <- extend.jags(results_lgn_Q_LR5,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
-                        burnin=0, summarise=FALSE, method="parallel")
-para_loo_M4lgn = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
-loo.M4lgn <- loo(para_loo_M4lgn)
-waic.M4lgn <- waic(para_loo_M4lgn)
-
-save.image(file="all_behave_noTMS_15072024.RData")
-
-
-
-###
+### # M5 is the  paper's cotrol model M4
 
 # Tell JAGS which latent variables to monitor
 monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3', 'mubeta4',
@@ -585,96 +568,10 @@ waic.M5 <- waic(para_loo_M5)
 
 ##
 
-results_DDM_LR_theta_thr <- run.jags(model="model_DDM_LR_theta_thr.txt",
-                                 monitor=monitor, data=datall, n.chains=3, 
-                                 inits=c(inits1, inits2, inits3), plots = TRUE,
-                                 burnin=10000, sample=1000, thin=10,
-                                 modules=c("wiener"), method=c("parallel"))
-
-results_DDM_LR_theta_thr
-para_th_thr_a <- extend.jags(results_DDM_LR_theta_thr,drop.monitor = monitor,add.monitor = monitor,check.stochastic = FALSE, sample = 1000, adapt=0,
-                         burnin=0, summarise=FALSE, method="parallel")
- 
-summary(para_th_thr_a)
-chains = rbind(results_DDM_LR_theta_thr$mcmc[[1]], results_DDM_LR_theta_thr$mcmc[[2]], results_DDM_LR_theta_thr$mcmc[[3]])
-DIC.M6  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M6
-
-
-
-##
-
-# Tell JAGS which latent variables to monitor
-monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3', 'mubeta4',
-            'nor',"ta","bet","delt","mu.LR",
-            'muthrb0','muthrb1',
-            "deviance")
-
-
-##
-
-results_DDM_LR_theta_thr_logit <- run.jags(model="model_DDM_LR_theta_thr_logit.txt",
-                                     monitor=monitor, data=datall, n.chains=3, 
-                                     inits=c(inits1, inits2, inits3), plots = TRUE,
-                                     burnin=10000, sample=1000, thin=10,
-                                     modules=c("wiener"), method=c("parallel"))
-
-plot(results_DDM_LR_theta_thr_logit) 
-
-para_th_thr_a <- extend.jags(results_DDM_LR_theta_thr,drop.monitor = monitor,add.monitor = monitor,check.stochastic = FALSE, sample = 1000, adapt=0,
-                             burnin=0, summarise=FALSE, method="parallel")
-
-summary(para_th_thr_a)
-chains = rbind(results_DDM_LR_theta_thr$mcmc[[1]], results_DDM_LR_theta_thr$mcmc[[2]], results_DDM_LR_theta_thr$mcmc[[3]])
-DIC.M6l  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M6l
-
-
-
-# Model comparison
-DICS=c(DIC.M0lgn, DIC.M1lgn,DIC.M2lgn,DIC.M3lgn,DIC.M4lgn ,
-       DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm,DIC.M4ddm#,
-       #loo.M0ddm,loo.M1ddm,loo.M2ddm,loo.M3ddm,loo.M4ddm
-       )
-
-DICS=c(#loo.M0lgn$estimates[3], loo.M1lgn$estimates[3],loo.M2lgn$estimates[3],loo.M3lgn$estimates[3] ,loo.M4lgn$estimates[3] ,
-  DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm,DIC.M4ddm, loo.M0ddm$estimates[3], loo.M1ddm$estimates[3],loo.M2ddm$estimates[3],loo.M3ddm$estimates[3],loo.M4ddm$estimates[3])
-
-Link=factor(c("1:DIC","1:DIC","1:DIC","1:DIC","1:DIC",
-              "2:LOOIC","2:LOOIC","2:LOOIC","2:LOOIC","2:LOOIC"))
-df <- data.frame(modelos = c("M0", "M1", "M2","M3(exp)","M3(q)"),
-                 Link = Link,
-                 dics = c(DICS[1:5]- min(DICS[1:5]),DICS[6:10]- min(DICS[6:10]))+1) 
-DIC = ggplot(df) +
-  geom_col(aes(x=modelos, y=dics, fill=Link), position=position_dodge()) +
-  theme(legend.position=c(0.7, 0.9)) +
-  labs(#title="Model Comparison by Metric", 
-    x="Models", 
-    y="Adjustment Difference", 
-    fill="Metric")
-
-library(latex2exp)
-library(plyr)
-library(dplyr)
-library(ggplot2)
-library(ggcharts)
-library(patchwork)
-
-layout <- "
-AB
-CB
-"
-#p1 + p2 + p3 + p4 + 
-#  plot_layout(design = layout)
-
-MP_p + PD+ DIC+plot_layout(design = layout) +
-plot_annotation(tag_levels = list(c('C','E','D')))
-
 #save.image(file="Model0_1_2_3_4_5_.RData")
 
 ###. valores predicho del modle M3ddm
-#muestras <- coda.samples(results_DDM_LR,variable.names = c("y","ta","nor"))
-DIC
+
 
 para_muestars <- extend.jags(results_DDM_LR,
                              drop.monitor = results_DDM_LR$monitor,
