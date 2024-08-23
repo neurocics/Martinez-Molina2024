@@ -13,16 +13,22 @@ library(ggplot2)
 library(patchwork)
 load.module("wiener")
 
-setwd("/Users/pablobilleke/Library/CloudStorage/OneDrive-udd.cl/Working papers/Martinez_theta/OLDs/DATA/MSIT")
+setwd("~/Documents/GitHub/Martinez-Molina2024/MSIT")
 
 source("../HDIofMCMC.r") 
 
 
 #DATA <- read.table('COR.txt',head=T,sep="\t")
 DATA <- read.table('DATA_MSIT_replication.txt',head=T,sep="\t")
+DATA <- read.table('COR.tsv',head=T,sep="\t")
 
 names(DATA)
 #  "rt"    "est"   "resp"  "laten" "good"  "acu"   "seq"   "subID" "subN" 
+DATA$est= DATA$value
+DATA$resp= DATA$response
+DATA$onset= DATA$laten
+
+unique(DATA$subID)
 
 hist(DATA$rt)
 
@@ -104,7 +110,7 @@ d <- data.frame(Qmenor = forTest$rt[forTest$p_conf_menorQ==1], Qmayor = forTest$
 
 ##
 
-
+#DATA=Data_f 
 Wrt = DATA$rt * (DATA$acu + (DATA$acu-1))
 
 (Nsubj=length(unique(DATA$subN)))
@@ -203,16 +209,10 @@ resultsM3expRL <- run.jags(model="DDM_LR.txt",
                     burnin=1000, sample=1000, thin=5, modules=c("wiener"), 
                     method=c("parallel"))
 
-resultsM3exp0.015
+
 chains = rbind(resultsM3expRL$mcmc[[1]], resultsM3expRL$mcmc[[2]], resultsM3expRL$mcmc[[3]])
 DIC.M3rl = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M3rl # 3469.397
-DIC.M30.04
-DIC.M30.03
-DIC.M30.02
-DIC.M30.015
-DIC.M30.01
-DIC.M30.001
 
 
 
@@ -251,7 +251,7 @@ chains = rbind(resultsM3fixLR$mcmc[[1]], resultsM3fixLR$mcmc[[2]], resultsM3fixL
 DIC.M3fixLR = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M3fixLR # [1] 3458.836
 
-save.image("msit_replication.RData")
+save.image("msit_replication_56.RData")
 
 
 ##3  Figure 
@@ -295,6 +295,7 @@ data_summary <- function(x) {
 pb1=mean(chains[,"mubeta1"]<0)*2
 pb2=mean(chains[,"mubeta2"]<0)*2
 HDIofMCMC(chains[,"mubeta1"])
+mean(chains[,"mubeta1"])
 pb3=mean(chains[,"mubeta3"]<0)*2
 
 
@@ -333,81 +334,6 @@ AABBB
 "
 
 MP_p + PP+plot_layout(design = layout) +plot_annotation(tag_levels = list(c('A','B')))
-
-
-
-
-
-
-## buscado correlacion entre betas 1 
-
-b1ps = extend.jags(resultsM3fixLR,drop.monitor = resultsM3fixLR$monitor,add.monitor = c("beta1"),burnin=0, sample=200,adapt = 0)
-b1pss=summary(b1ps)
-#load("../relication_data_msir.RData")
-
-b1ps_gng = extend.jags(results_M3_DDMrlps,drop.monitor = results_M3_DDMrlps$monitor,add.monitor = c("beta1"),burnin=0, sample=200,adapt = 0)
-b1ps_gngs=summary(b1ps_gng)
-##
-
-#find pair for the same subject 
-
-
-su =levels(factor(DATA$subID))
-ind_GNG=numeric()
-ind_MSIT=numeric()
-LRm = numeric()
-LRg = numeric()
-#data$Dsu <- 0 
-n=0;
-for (e  in su) {
-  n=n+1;
-  #data$Dsu =  data$Dsu + (data$Sub==e)*n
-  #DATA$S_a[DATA$Sub==e] = substr(e, 2,10)
-  ind_MSIT[n] = unique(DATA$subN[DATA$subID==e])
-  LRm[n] = unique(DATA$LRmean[DATA$subID==e])
-  ene = unique(data$Dsu2[data$S_a==substr(e, 2,10)])
-  
-  if (length(ene)>0) {
-    ind_GNG[n] = unique(data$Dsu2[data$S_a==substr(e, 2,10)])
-    LRg[n] = unique(data$LRmean [data$S_a==substr(e, 2,10)])
-    }
-}
-
-b1G = b1ps_gngs[ind_GNG,4]
-
-b1M = b1pss[ind_GNG,4]
-b1M = b1M[which(!is.na(b1M))]
-b1G = b1G[which(!is.na(b1G))]
-#b1G = b1G[which(!is.na(b1G))]
-
-cor.test(scale(b1G),scale(b1M))
-cor.test(scale(LRg[!is.na(LRg)]),scale(LRm[!is.na(LRg)]))
-rh_beta(b1ps_gngs[ind_GNG,2],)
-
-
-##  for plot 
-pv2str =  function(pval){
-  if (pval<0.001){
-    AST="***"} else {if (pval<0.01){
-      AST="**"} else {if (pval<0.05){
-        AST="*"}else{AST=""}}
-    }  
-}
-
-RR <- ggplot(data=E, aes(y=ShiftRate, x=Taui))
-RR = RR + 
-  #scale_x_continuous(limits = c(0.39, 0.81))+
-  #geom_bin2d(binwidth=c(0.025, 1/8)) +
-  #scale_fill_gradient(high = "Red" , low="grey90" )  + #low="darkred", 
-  geom_smooth(method=lm) + geom_smooth(se=FALSE,span=2,linetype="dashed") +
-  theme_classic()+
-  theme(legend.position = "none") +
-  geom_point(size=3,color="brown",alpha=0.7)+
-  ylab(TeX("$\\beta_1$ MSIT (z)")) + xlab(TeX("$\\beta_1$ GNG (z)"))  +
-  annotate(geom="text", x=0, y=max(E$ShiftRate)+0.25, label=TeX(paste("$\\rho = ",as.character(round(rh_beta$estimate*100)/100),pv2str(rh_beta$p.value),sep="")),
-           color="black")
-#geom_jitter( position=position_jitter(0.01),size = 3)
-
 
 
 

@@ -413,16 +413,52 @@ loo.M3ddm_c <- loo(para_loo_M3ddm_c)
 waic.M3ddm_c <- waic(para_loo_M3ddm_c)
 
 
+setwd("~/Documents/GitHub/Martinez-Molina2024/Exp1")
+# Run the function that fits the models using JAGS
+results_DDM_Q_LR <- run.jags(model="model_Q_LR_DDM.txt",
+                             monitor=monitor, data=datall, n.chains=3, 
+                             inits=c(inits1, inits2, inits3), plots = TRUE,
+                             burnin=10000, sample=1000, thin=10,
+                             modules=c("wiener"), method=c("parallel"))
+
+results_DDM_Q_LR 
+results_DDM_Q_LR2 <- extend.jags(results_DDM_Q_LR,drop.monitor = results_DDM_Q_LR$monitor,
+                             add.monitor = results_DDM_Q_LR$monitor,
+                             burnin=10000, sample=1000, thin=10)
+
+results_DDM_Q_LR2 
+
+
+
+chains = rbind(results_DDM_Q_LR2$mcmc[[1]], results_DDM_Q_LR2$mcmc[[2]], results_DDM_Q_LR2$mcmc[[3]])
+DIC.M4ddm  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
+DIC.M4ddm 
+
+# 79350.75
+
+para_loo <- extend.jags(results_DDM_Q_LR2,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
+                        burnin=0, summarise=FALSE, method="parallel")
+para_loo_M4ddm = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
+loo.M4ddm <- loo(para_loo_M4ddm)
+waic.M4ddm <- waic(para_loo_M4ddm)
+
+
+
+
 # Compare the two models
 loo_compare(loo.M1ddm,loo.M1lgn,loo.M2ddm,loo.M2lgn)
 
-loo_compare(loo.M3ddm,loo.M3lgn,loo.M0lgn,loo.M0ddm,loo.M1lgn,loo.M1ddm,loo.M2lgn,loo.M2ddm)*2
+loo_compare(loo.M3ddm,
+            loo.M0ddm,
+            loo.M1ddm,
+            loo.M2ddm,
+            loo.M4ddm)*2
 
 
 c(DIC.M3ddm,DIC.M3lgn,DIC.M0lgn,DIC.M0ddm,DIC.M1lgn,DIC.M1ddm,DIC.M2lgn,DIC.M2ddm)-DIC.M3ddm
 
 
-save.image(file="data_repli.RData")
+save.image(file="data_repli.22.08.2024.RData")
 
 ##3  Figure 
 chains = rbind(results_DDM_LRfix $mcmc[[1]], results_DDM_LRfix $mcmc[[2]], results_DDM_LRfix $mcmc[[3]])
@@ -434,7 +470,7 @@ cadena =  c(chains[,"mubeta1"]/1,
             #chains[,"mu.LR"]
 )
 plotData= data.frame(cadena)
-plotData$beta = c(rep("Exp",3000),
+plotData$beta = c(rep("Ex",3000),
                   rep("pCE",3000),
                   rep("pOE",3000)
                   #rep("Driff",3000),
@@ -442,11 +478,11 @@ plotData$beta = c(rep("Exp",3000),
                   #rep("LR",3000)
 )
 
-mean(plotData$cadena[plotData$beta=="Exp"])*1000
-HDIofMCMC(plotData$cadena[plotData$beta=="Exp"])*1000
+mean(plotData$cadena[plotData$beta=="Ex"])*1000
+HDIofMCMC(plotData$cadena[plotData$beta=="Ex"])*1000
 ppoe = min(mean(plotData$cadena[plotData$beta=="pOE"]>0),mean(plotData$cadena[plotData$beta=="pOE"]<0))*2
 ppce = min(mean(plotData$cadena[plotData$beta=="pCE"]>0),mean(plotData$cadena[plotData$beta=="pCE"]<0))*2
-pexp = min(mean(plotData$cadena[plotData$beta=="Exp"]>0),mean(plotData$cadena[plotData$beta=="Exp"]<0))*2
+pexp = min(mean(plotData$cadena[plotData$beta=="Ex"]>0),mean(plotData$cadena[plotData$beta=="Ex"]<0))*2
 
 ### plot 
 library(latex2exp)
@@ -496,20 +532,31 @@ PD = ggplot(plotData, aes(y=cadena, x = beta, color=beta, fill = beta)) +
 
 
 # Model comparison
-DICS=c(DIC.M0lgn, DIC.M1lgn,DIC.M2lgn,DIC.M3lgn ,DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm)
+DICS=c(loo.M0ddm$estimates[3,1],#DIC.M0lgn, 
+       loo.M1ddm$estimates[3,1],#
+       loo.M2ddm$estimates[3,1],#
+       loo.M3ddm$estimates[3,1],#
+       loo.M4ddm$estimates[3,1],#
+       DIC.M0ddm, 
+       DIC.M1ddm,
+       DIC.M2ddm,
+       DIC.M3ddm,
+       DIC.M4ddm)
 #DICS=c(loo.M0lgn$estimates[3], loo.M1lgn$estimates[3],loo.M2lgn$estimates[3],loo.M3lgn$estimates[3] ,
        #  loo.M0ddm$estimates[3], loo.M1ddm$estimates[3],loo.M2ddm$estimates[3],loo.M3ddm$estimates[3])
 
-Link=factor(c("2:DDM","2:DDM","2:DDM","2:DDM","1:Lgn","1:Lgn","1:Lgn","1:Lgn"))
-df <- data.frame(modelos = c("M0", "M1", "M2","M3"),
+Link=factor(c("LOOIC","LOOIC","LOOIC","LOOIC","LOOIC",
+              "DIC","DIC","DIC","DIC","DIC"))
+df <- data.frame(modelos = c("M0", "M1", "M2","M3(seq)","M3(Q)","M0", "M1", "M2","M3(seq)","M3(Q)"),
                  Link = Link,
-                 dics = DICS- min(DICS)+1)
+                 dics = c(DICS[1:5]- min(DICS[1:5])+1  ,DICS[6:10]- min(DICS[6:10])+1  ) )
 DIC = ggplot(df) +
   geom_col(aes(x=modelos, y=dics,fill=Link),position = position_dodge())+
-  theme(legend.position = c(0.7, 0.9))+
-  ylab("DIC difference")+
-  xlab("Models ")
-
+  theme(legend.position=c(0.7, 0.9)) +
+  labs(#title="Model Comparison by Metric", 
+    x="Models", 
+    y="Adjustment Difference", 
+    fill="Metric")
 library(latex2exp)
 library(plyr)
 library(dplyr)

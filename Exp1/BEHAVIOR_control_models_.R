@@ -296,6 +296,8 @@ chains = rbind(results_DDM$mcmc[[1]], results_DDM$mcmc[[2]], results_DDM$mcmc[[3
 DIC.M1ddm = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M1ddm
 
+
+
 # 
 #  79387.42 (datall)
 
@@ -304,6 +306,8 @@ para_loo <- extend.jags(results_DDM,drop.monitor = monitor,add.monitor = c("Drtl
 para_loo_M1ddm = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
 loo.M1ddm <- loo(para_loo_M1ddm)
 waic.M1ddm <- waic(para_loo_M1ddm)
+
+
 
 
 # Run the function that fits the models using JAGS
@@ -522,16 +526,21 @@ results_lgn_Q_LR2 <- extend.jags(results_lgn_Q_LR,check.stochastic = FALSE, samp
 results_lgn_Q_LR3 <- extend.jags(results_lgn_Q_LR2,check.stochastic = FALSE, sample = 1000, adapt=0,
                                  drop.monitor = results_lgn_Q_LR2$monitor, add.monitor = monitor,
                         burnin=1000, summarise=FALSE, method="parallel")
+results_lgn_Q_LR4 <- extend.jags(results_lgn_Q_LR3,check.stochastic = FALSE, sample = 1000, adapt=0,thin=10,
+                                 drop.monitor = results_lgn_Q_LR2$monitor, add.monitor = monitor,
+                                 burnin=10000, summarise=FALSE, method="parallel")
+results_lgn_Q_LR5 <- extend.jags(results_lgn_Q_LR4,check.stochastic = FALSE, sample = 1000, adapt=0,thin=20,
+                                 drop.monitor = results_lgn_Q_LR4$monitor, add.monitor = monitor,
+                                 burnin=0, summarise=FALSE, method="parallel")
+summary(results_lgn_Q_LR5)
 
-summary(results_lgn_Q_LR3)
-
-chains = rbind(results_lgn_Q_LR2$mcmc[[1]], results_lgn_Q_LR2$mcmc[[2]], results_lgn_Q_LR2$mcmc[[3]])
+chains = rbind(results_lgn_Q_LR5$mcmc[[1]], results_lgn_Q_LR5$mcmc[[2]], results_lgn_Q_LR5$mcmc[[3]])
 DIC.M4lgn  = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M4lgn 
 
 # 
 
-para_loo <- extend.jags(results_lgn_Q_LR,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
+para_loo <- extend.jags(results_lgn_Q_LR5,drop.monitor = monitor,add.monitor = c("Drtlog"),check.stochastic = FALSE, sample = 200, adapt=0,
                         burnin=0, summarise=FALSE, method="parallel")
 para_loo_M4lgn = rbind(para_loo$mcmc[[1]], para_loo$mcmc[[2]],para_loo$mcmc[[3]])
 loo.M4lgn <- loo(para_loo_M4lgn)
@@ -624,21 +633,25 @@ DIC.M6l
 
 # Model comparison
 DICS=c(DIC.M0lgn, DIC.M1lgn,DIC.M2lgn,DIC.M3lgn,DIC.M4lgn ,
-       DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm,DIC.M4ddm)
+       DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm,DIC.M4ddm#,
+       #loo.M0ddm,loo.M1ddm,loo.M2ddm,loo.M3ddm,loo.M4ddm
+       )
 
-DICS=c(loo.M0lgn$estimates[3], loo.M1lgn$estimates[3],loo.M2lgn$estimates[3],loo.M3lgn$estimates[3] ,loo.M4lgn$estimates[3] ,
-         loo.M0ddm$estimates[3], loo.M1ddm$estimates[3],loo.M2ddm$estimates[3],loo.M3ddm$estimates[3],loo.M4ddm$estimates[3])
+DICS=c(#loo.M0lgn$estimates[3], loo.M1lgn$estimates[3],loo.M2lgn$estimates[3],loo.M3lgn$estimates[3] ,loo.M4lgn$estimates[3] ,
+  DIC.M0ddm, DIC.M1ddm,DIC.M2ddm,DIC.M3ddm,DIC.M4ddm, loo.M0ddm$estimates[3], loo.M1ddm$estimates[3],loo.M2ddm$estimates[3],loo.M3ddm$estimates[3],loo.M4ddm$estimates[3])
 
-Link=factor(c("1:Lgn","1:Lgn","1:Lgn","1:Lgn","1:Lgn",
-              "2:DDM","2:DDM","2:DDM","2:DDM","2:DDM"))
-df <- data.frame(modelos = c("M0", "M1", "M2","M3","M4"),
+Link=factor(c("1:DIC","1:DIC","1:DIC","1:DIC","1:DIC",
+              "2:LOOIC","2:LOOIC","2:LOOIC","2:LOOIC","2:LOOIC"))
+df <- data.frame(modelos = c("M0", "M1", "M2","M3(exp)","M3(q)"),
                  Link = Link,
-                 dics = DICS- min(DICS)+1)
+                 dics = c(DICS[1:5]- min(DICS[1:5]),DICS[6:10]- min(DICS[6:10]))+1) 
 DIC = ggplot(df) +
-  geom_col(aes(x=modelos, y=dics,fill=Link),position = position_dodge())+
-  theme(legend.position = c(0.7, 0.9))+
-  ylab("DIC difference")+
-  xlab("Models ")
+  geom_col(aes(x=modelos, y=dics, fill=Link), position=position_dodge()) +
+  theme(legend.position=c(0.7, 0.9)) +
+  labs(#title="Model Comparison by Metric", 
+    x="Models", 
+    y="Adjustment Difference", 
+    fill="Metric")
 
 library(latex2exp)
 library(plyr)
@@ -654,13 +667,14 @@ CB
 #p1 + p2 + p3 + p4 + 
 #  plot_layout(design = layout)
 
-MP_p + PD+ DIC+plot_layout(design = layout) +plot_annotation(tag_levels = list(c('A','C','B')))
+MP_p + PD+ DIC+plot_layout(design = layout) +
+plot_annotation(tag_levels = list(c('C','E','D')))
 
 #save.image(file="Model0_1_2_3_4_5_.RData")
 
 ###. valores predicho del modle M3ddm
 #muestras <- coda.samples(results_DDM_LR,variable.names = c("y","ta","nor"))
-
+DIC
 
 para_muestars <- extend.jags(results_DDM_LR,
                              drop.monitor = results_DDM_LR$monitor,
@@ -774,10 +788,70 @@ library(ggcharts)
 library(patchwork)
 
 layout <- "
-AABBCC
+AABB
 "
 #p1 + p2 + p3 + p4 + 
 #  plot_layout(design = layout)
 
-GA + GC + GB+  plot_layout(design = layout) +plot_annotation(tag_levels = list(c('A','B','C')))
+GA + GC +  plot_layout(design = layout) +plot_annotation(tag_levels = list(c('A','B','C')))
 
+##
+
+
+sequencia = c(1,2,3,4,5,6,7,0,1,2,3,4,0,1,2,3,4,5,6,7)
+#sequencia = c(1,2,3,4,5,6,7)
+y1=sequencia * 1.931 # escalado al beta del modelo ajustado
+Q2=0.25
+y2=(1-(1-Q2)^(sequencia-1))*14.45 # escalado al beta del modelo ajustado
+Q3=0.25;
+for (n in 1:(length(sequencia)-1)){Q3[n+1] = Q3[n]+0.26*((1-(sequencia[n]>0))-Q3[n])} # alpha del modelo ajustado
+y3=(1-(1-Q3)^(sequencia-1) )*42.093
+
+Q4=0.25;
+for (n in 1:(length(sequencia)-1)){Q4[n+1] = Q4[n]+0.01*((1-(sequencia[n]>0))-Q4[n])} # alpha del modelo ajustado
+y4=(-Q4*250)+65 # escalado al beta del modelo ajustado
+
+
+
+# Crear un data frame con los datos
+data <- data.frame(
+  x = rep(1:(length(sequencia)-2), 4),
+  y = c(y1[which(sequencia>0)], y2[which(sequencia>0)], y3[which(sequencia>0)],y4[which(sequencia>0)]),
+  #y = c(y1,y2,y3,y4),
+  group = rep(c("M1", "M2", "M3(seq)","M3(q)"), each = length(sequencia)-2)
+)
+
+# Crear el gráfico con ggplot2
+ggplot(data, aes(x = x, y = y, color = group)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Model-Based Expectation of Conflict", x = "Sequences of GO", y = "Expectation [A.U]") +
+  theme_minimal() +
+  geom_vline(xintercept = c(7.5, 11.5, 18.5), linetype = "dashed", color = "black") +
+  annotate("text", x = c(18.5), y = 3, label = "Nogo", angle = 90, vjust = -0.5, color = "black") +
+  scale_x_continuous(breaks = 1:18, labels = c(1:7,1:4,1:7)) +
+  #scale_color_manual(values = c("blue", "red", "green")) +
+  theme(legend.title = element_blank())
+
+
+data$mn_new = as.factor(((data$seq<3)*-1 + (data$seq>5)*1 ) +2)
+data$mn_new = as.factor(data$seq)
+rt_final = aggregate(rt ~ mn_new, FUN=mean, data=data[data$rt>100 & data$est==1 & data$seq>0 & data$perror==0,]) 
+
+
+library(dplyr)
+
+# Calcular las medias y errores estándar
+rt_summary <- data %>%
+  filter(rt > 100, est == 1, seq > 0, perror == 0) %>%
+  group_by(mn_new) %>%
+  summarise(mean_rt = mean(rt),
+            se_rt = sd(rt) / sqrt(n()))
+
+# Crear el gráfico de barras con barras de error
+ggplot(rt_summary, aes(x = mn_new, y = mean_rt)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  geom_errorbar(aes(ymin = mean_rt - se_rt, ymax = mean_rt + se_rt), width = 0.2) +
+  labs(x = "Mn New", y = "Reaction Time (Mean ± SE)", title = "Mean Reaction Time with Error Bars") +
+  coord_cartesian(ylim = c(310, 350)) +  # Recortar el eje y entre 310 y 400
+  theme_minimal()

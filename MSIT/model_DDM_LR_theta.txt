@@ -25,7 +25,7 @@ Drtlog[ii] <-dlogwiener(Drt[ii],y[ii],ta,0.5,nor)
     y[ii] <- beta0[idSub[ii]] +    
       beta1[idSub[ii]]*exp[ii]*(1-CNF[ii]) + 
       beta2[idSub[ii]]*CNF[ii] + 
-      beta3[idSub[ii]]*pError[ii]  G  
+      beta3[idSub[ii]]*pError[ii] 
 	}
 
 for (S in 1:Nsubj){ # Subject 

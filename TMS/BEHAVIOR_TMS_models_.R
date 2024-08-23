@@ -307,7 +307,7 @@ summary(results_M3_DDMrlpsex)
 
 
 
-chains = rbind(results_M3_DDMrlps$mcmc[[1]], results_M3_DDMrlps$mcmc[[2]], results_M3_DDMrlps$mcmc[[3]])
+chains = rbind(results_M3_DDMrlpsex$mcmc[[1]], results_M3_DDMrlpsex$mcmc[[2]], results_M3_DDMrlpsex$mcmc[[3]])
 DIC = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC # .29   -->  462531.4   ind --> 462431.3
 (pval = min(mean(chains[,"mubeta1"]<0)*2, mean(chains[,"mubeta1"]>0)*2))
@@ -324,9 +324,12 @@ DIC # .29   -->  462531.4   ind --> 462431.3
 #save.image("TMS_04092022.RData")
 
 
+results_M3_DDM_cohe= extend.jags(results_M3_DDMrlps,drop.monitor = results_M3_DDMrlps$monitor, add.monitor = c("mubeta7","sigmabeta7"), burnin=0, sample=200,adapt = 0)
+summary(results_M3_DDM_cohe)
+chains = rbind(results_M3_DDM_cohe$mcmc[[1]], results_M3_DDM_cohe$mcmc[[2]], results_M3_DDM_cohe$mcmc[[3]])
 
-
-
+D = (chains[,"mubeta7"]/chains[,"sigmabeta7"])/2
+mean(D)
 # -------------------------------------
 # 
 # -------------------------------------
