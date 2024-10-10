@@ -18,9 +18,10 @@ setwd("~/Documents/GitHub/Martinez-Molina2024/MSIT")
 source("../HDIofMCMC.r") 
 
 
-DATA <- read.table('COR.txt',head=T,sep="\t")
+
+DATA <- read.table("Behavioral_MSIT.csv", header=TRUE,sep=",")
 names(DATA)
-#  "rt"    "est"   "resp"  "laten" "good"  "acu"   "seq"   "subID" "subN" 
+#  "rt"    "est"   "resp"  "laten" "good"  "acu"   "seq"  "subN" 
 
 hist(DATA$rt)
 

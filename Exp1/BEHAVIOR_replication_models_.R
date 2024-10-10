@@ -518,16 +518,16 @@ PD = ggplot(plotData, aes(y=cadena, x = beta, color=beta, fill = beta)) +
   scale_fill_manual(values=c("#77ac30ff","#808080ff","#808080ff"))+
   scale_color_manual(values=c("#77ac30ff","#808080ff","#808080ff"))+
    #ggtitle("Reaction time slowing")+  #  
-  ylab("Posterior distribution (a.u.)")+
+  ylab("Posterior distribution (arb. units)")+
   xlab("Model parameters")+
   theme(legend.position = "none") +
   coord_flip()+
   stat_summary(fun.data=data_summary, geom="pointrange", color="black")+
   annotate(geom="text", y=10, x=3.3, label=pv2str(ppoe),
            color="black") +
-  annotate(geom="text", y=25, x=2.3, label=pv2str(ppce),
+  annotate(geom="text", y=35, x=2.3, label=pv2str(ppce),
            color="black") +
-  annotate(geom="text", y=65, x=1.3, label=pv2str(pexp),
+  annotate(geom="text", y=55, x=1.3, label=pv2str(pexp),
            color="black") 
 
 

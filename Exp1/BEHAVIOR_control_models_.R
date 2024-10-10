@@ -26,9 +26,8 @@ pv2str =  function(pval){
 
 
 
-# Draw random samples with JAGS
-# in COR.txt all de trails of behavioral experiments 
-data <- read.table("COR.txt", header=TRUE,sep="\t")
+
+data <- read.table("Behavioral_GNG.csv", header=TRUE,sep=",")
 
 names(data)
 dime =dim(data)
@@ -414,13 +413,21 @@ loo.M4lgn <- loo(para_loo_M4lgn)
 waic.M4lgn <- waic(para_loo_M4lgn)
 
 #save.image(file="all_behave_noTMS_15072024.RData")
-
-
-
-
-
-
 #save.image(file="all_behave_noTMS_10072024.RData")
+
+save(results_DDM_LR,loo.M0ddm,
+     loo.M1ddm,#
+     loo.M2ddm,#
+     loo.M3ddm,#
+     loo.M4ddm,#
+     DIC.M0ddm, 
+     DIC.M1ddm,
+     DIC.M2ddm,
+     DIC.M3ddm,
+     DIC.M4ddm
+
+file="data_Figure_1.RData")
+
 
 ##3  Figure 
 chains = rbind(results_DDM_LR $mcmc[[1]], results_DDM_LR $mcmc[[2]], results_DDM_LR $mcmc[[3]])
@@ -607,12 +614,6 @@ for (i in 1:7232){
                beta = 0.5, delta = muestras_matriz_par[np,2])
   RTpre2[i] = as.numeric(d[1])
 }
-
-
-
-
-
-
 
 
 

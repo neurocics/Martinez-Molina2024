@@ -1,0 +1,12 @@
+{
+  "DATA": "Behavioral data",
+  "TASK": "Go-NoGo task",
+  "Parameters": {
+    "rt": "Reaction time (in milliseconds)",
+    "est": "Stimulus type: 1 = Go, 2 = NoGo",
+    "resp": "Response, -99 indicates no response",
+    "laten": "Onset of stimulus (in milliseconds)",
+    "good": "Recording accuracy: 1 = correct, 0 = incorrect",
+    "SU": "Participant ID"
+  }
+}

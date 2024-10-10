@@ -9,11 +9,15 @@ library(rjags)
 load.module("wiener")
 
 
-setwd("/Users/pablobilleke/Library/CloudStorage/OneDrive-udd.cl/Working\ papers/Martinez_theta/OLDs/DATA")
-source("HDIofMCMC.r") 
+setwd("~/Documents/GitHub/Martinez-Molina2024/TMS")
+source("../HDIofMCMC.r") 
 
 # Draw random samples with JAGS
-data <- read.table("COR.txt", header=TRUE,sep="\t")
+#data <- read.table("COR.txt", header=TRUE,sep="\t")
+#data$Sub
+#write.csv(data[ , c(1:5, 7,8,9,10,11,13)], file="Behavioral_TMS.csv")
+data <- read.table("Behavioral_TMS.csv", header=TRUE,sep=",")
+
 names(data)
 dime =dim(data)
 # [1] "rt"       "est"      "resp"     "laten"    "good"     "Sub"      "TMS"      "TMS_SITE" "nnb"      "seq"     
@@ -32,40 +36,13 @@ data$error = (data$rt<0 & data$est==10) + (data$rt>0 & data$est==21)
 data$perror = c(0, data$error[1:(dime[1]-1)])
 
 
-su =levels(factor(data$Sub))
-data$Dsu <- 0 
-n=0;
-for (e  in su) {
-    n=n+1;
-    data$Dsu =  data$Dsu + (data$Sub==e)*n
-    data$S_a[data$Sub==e] = substr(e, 2,10)
-}
 
-data$S_a[data$S_a=="ClaudioMe"]="CEMM_0904"
-data$S_a[data$S_a=="Nicolas_L"]="NELR_2712"
-data$S_a[data$S_a=="Nicolas_F"]="NIFL_2309"
-data$S_a[data$S_a=="Constanza"]="CMST_1212"
-data$S_a[data$S_a=="TomasCher"]="TICA_0502"
-data$S_a[data$S_a=="Yerka"]="YTFV_0908"
-data$S_a[data$S_a=="Kristen_P"]="KKPM_1612"
-data$S_a[data$S_a=="Catalina_"]="CIPA2003"
-data$S_a[data$S_a=="Camila_Ag"]="CCAC_1207"
-data$S_a[data$S_a=="CarolaM"]="CAMG_1812"
-data$S_a[data$S_a=="Carina_st"]="C_SL_1903"
-data$S_a[data$S_a=="Gabriela"]="GBVO_2512"
-data$S_a[data$S_a=="ClaudioDi"]="CADC_0103"
 
-su =levels(factor(data$S_a))
-data$Dsu2 <- 0 
-n=0;
-for (e  in su) {
-  n=n+1;
-  data$Dsu2 =  data$Dsu2 + (data$S_a==e)*n
-}
-# correlative id for subjects 
+# correlative id for sessions
 sort(unique(data$Dsu))
 (Nsubj=length(unique(data$Dsu)))
 
+# correlative id for subjects 
 sort(unique(data$Dsu2))
 (Nsubj=length(unique(data$Dsu2)))
 
@@ -201,7 +178,6 @@ AB
 #  plot_layout(design = layout)
 
 MP_A + MP_B +plot_layout(design = layout)
-
 
 
 

@@ -1,8 +1,8 @@
 
 clear
 close all
-%load('TMS_model_22_23s.mat')
-load('model_grupal_exp.mat')
+load('TMS_model_22_23s.mat')
+%load('model_grupal_exp.mat')
 
 %figure_lan
 %topoplot_lan([],GLAN.chanlocs,'style','blank','electrodes','labelpoint');  
@@ -30,7 +30,15 @@ DATA{1} = GLAN.timefreq.subdata{2,5}(:,:,t1:t2,:);
 
 unique(pvalc)
 %%
-ELE=1;
+
+t1 = find_approx(GLAN.timefreq.time,-0.5) ;
+t2 = find_approx(GLAN.timefreq.time,1) ;
+f1 = find_approx(GLAN.timefreq.freq,1) ;
+f2 = find_approx(GLAN.timefreq.freq,30) ;
+
+
+
+ELE=[IZall DERall];
 p_plot = pvalc<0.05 & pval<0.05;
 p_plot = sum(p_plot(:,ELE,:),2);
 
