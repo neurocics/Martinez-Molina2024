@@ -11,11 +11,9 @@ load.module("wiener")
 library(lme4)
 library(rstatix)
 library(ggplot2)
-# setwd("/Volumes/GoogleDrive-112808863907079649330/Mi unidad/Clases/Clases_UDD/Rafael/scripts")
-#setwd("/Volumes/GoogleDrive-112808863907079649330/Mi\ unidad/Working\ papers/Martinez_theta/OLDs/DATA/control_noTMS")
-#setwd("/Volumes/GoogleDrive/Mi\ unidad/Working\ papers/Martinez_theta/OLDs/DATA/control_noTMS")
-setwd("/Users/pablobilleke/Library/CloudStorage/OneDrive-udd.cl/Working\ papers/Martinez_theta/OLDs/DATA/control_noTMS")
+setwd("~/Documents/GitHub/Martinez-Molina2024/Exp1/")
 source("../HDIofMCMC.r") 
+
 
 pv2str =  function(pval){
   if (pval<0.001){
@@ -28,7 +26,9 @@ pv2str =  function(pval){
 
 
 # Draw random samples with JAGS
-data <- read.table("replication.txt", header=TRUE,sep="\t")
+data <- read.table("Behavioral_GNG_replication.csv", header=TRUE,sep=",")
+
+
 
 names(data)
 dime =dim(data)

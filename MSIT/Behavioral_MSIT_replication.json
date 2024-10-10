@@ -1,0 +1,14 @@
+{
+  "DATA": "Behavioral data",
+  "TASK": "Multi-Source Interference Task (MSIT)",
+  "Parameters": {
+    "rt": "Reaction time (in milliseconds)",
+    "value": "Stimulus type: 11 = Copngruent, 12 = Incongruent",
+    "response": "Response, -99 indicates no response",
+    "onset": "Stimulus onset time (in milliseconds)",
+    "good": "Recording accuracy: 1 = correct, 0 = incorrect",
+    "subN": "Participant ID",
+    "seq": "Sequence of consecutive identical stimuli",
+    "acu": "Accuracy: 1 = correct, 2 = incorrect"
+  }
+}

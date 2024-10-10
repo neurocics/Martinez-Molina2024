@@ -18,9 +18,9 @@ setwd("~/Documents/GitHub/Martinez-Molina2024/MSIT")
 source("../HDIofMCMC.r") 
 
 
-#DATA <- read.table('COR.txt',head=T,sep="\t")
-DATA <- read.table('DATA_MSIT_replication.txt',head=T,sep="\t")
-DATA <- read.table('COR.tsv',head=T,sep="\t")
+
+DATA <- read.table("Behavioral_MSIT_replication.csv",head=T,sep=",")
+
 
 names(DATA)
 #  "rt"    "est"   "resp"  "laten" "good"  "acu"   "seq"   "subID" "subN" 
@@ -28,7 +28,7 @@ DATA$est= DATA$value
 DATA$resp= DATA$response
 DATA$onset= DATA$laten
 
-unique(DATA$subID)
+unique(DATA$subN)
 
 hist(DATA$rt)
 

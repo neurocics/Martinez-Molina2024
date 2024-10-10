@@ -197,18 +197,7 @@ resultsM4 <- run.jags(model="DDM_LR_M4.txt",
                            method=c("parallel"))
 
 
-resultsM3exp0.015
-chains = rbind(resultsM3expRL$mcmc[[1]], resultsM3expRL$mcmc[[2]], resultsM3expRL$mcmc[[3]])
-DIC.M3rl = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M3rl # 3469.397
-DIC.M30.04
-DIC.M30.03
-DIC.M30.02
-DIC.M30.015
-DIC.M30.01
-DIC.M30.001
-
-
+chains = rbind(resultsM3expRL2$mcmc[[1]], resultsM3expRL2$mcmc[[2]], resultsM3expRL2$mcmc[[3]])
 
 rlps = extend.jags(resultsM3expRL,drop.monitor = resultsM3expRL$monitor,add.monitor = c("LR"),burnin=0, sample=200,adapt = 0)
 
@@ -245,7 +234,7 @@ chains = rbind(resultsM3fixLR$mcmc[[1]], resultsM3fixLR$mcmc[[2]], resultsM3fixL
 DIC.M3fixLR = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
 DIC.M3fixLR # [1] 3458.836
 
-save.image("msit_04102022.RData")
+#save.image("msit_04102022.RData")
 
 
 ##3  Figure 
@@ -361,16 +350,3 @@ DIC.M5 # [1]
 
 
 
-
-
-
-# Run the function that fits the models using JAGS
-resultsM6<- run.jags(model="../Exp1/model_DDM_LR_theta_thr.txt",
-                     monitor=monitor, data=dat, n.chains=3, 
-                     inits=c(inits1, inits2, inits3), plots = TRUE,
-                     burnin=5000, sample=1000, thin=5, modules=c("wiener"), 
-                     method=c("parallel"))
-
-chains = rbind(resultsM5$mcmc[[1]], resultsM5$mcmc[[2]], resultsM5$mcmc[[3]])
-DIC.M6 = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC.M6 # [1] 3458.836

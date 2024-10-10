@@ -1,0 +1,18 @@
+{
+  "DATA": "Behavioral data",
+  "TASK": "Go-NoGo task",
+  "Parameters": {
+    "rt": "Reaction time (in milliseconds)",
+    "value": "Stimulus type: 10 = Go, 21 = NoGo",
+    "duration": "Code pulse duration",
+    "response": "Response (-99 indicates no response)",
+    "onset": "Stimulus onset time (in milliseconds)",
+    "good": "Recording accuracy: 1 = correct, 0 = incorrect",
+    "seq": "Sequence of consecutive Go stimuli",
+    "misport_code": "Code missing in EEG recordings",
+    "misport_port": "Port of missing code in EEG recordings",
+    "misport_time": "Onset of missing code in EEG recordings",
+    "misport_time_error": "Errors in estimated time for missing code in EEG recordings",
+    "SU": "Participant ID"
+  }
+}

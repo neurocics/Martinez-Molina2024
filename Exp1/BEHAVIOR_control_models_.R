@@ -164,7 +164,7 @@ monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3', 'mubeta4','nor',
             "th","muthr")
 
 
-resultsl0 <- run.jags(model="model_null_l.txt",
+resultsl0 <- run.jags(model="M0lmodel_null_l.txt",
                                               monitor=monitor, data=datall, n.chains=3, 
                                               inits=c(inits1, inits2, inits3), plots = TRUE,
                                               burnin=2000, sample=1000, thin=5,
@@ -424,9 +424,7 @@ save(results_DDM_LR,loo.M0ddm,
      DIC.M1ddm,
      DIC.M2ddm,
      DIC.M3ddm,
-     DIC.M4ddm
-
-file="data_Figure_1.RData")
+     DIC.M4ddm, file="data_Figure_1.RData")
 
 
 ##3  Figure 
