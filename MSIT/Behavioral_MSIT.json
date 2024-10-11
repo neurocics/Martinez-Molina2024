@@ -9,6 +9,8 @@
     "good": "Recording accuracy: 1 = correct, 0 = incorrect",
     "subN": "Participant ID",
     "seq": "Sequence of consecutive identical stimuli",
-    "acu": "Accuracy: 1 = correct, 2 = incorrect"
+    "acu": "Accuracy: 1 = correct, 2 = incorrect",
+    "Sex": "Sex (M = Male, F = Female, self-reported)",
+    "Age": "Age (years)"
   }
 }

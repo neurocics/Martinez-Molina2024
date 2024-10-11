@@ -1,0 +1,19 @@
+{
+  "DATA": "Behavioral data",
+  "TASK": "Go-NoGo task",
+  "Parameters": {
+    "rt": "Reaction time (ms)",
+    "est": "Stimulus type: 10 = Go, 21 = NoGo",
+    "resp": "Response (negative 99 [-99] indicates no response)",
+    "laten": "Stimulus onset time (ms)",
+    "good": "Recording accuracy (1 = correct, 0 = incorrect)",
+    "TMS": "TMS pulse type (51 = theta, 52 = no-theta, 50 = sham)",
+    "TMS_SITE": "TMS target site (A = SFG, B = IFJ)",
+    "nnb": "Stimulus position relative to TMS stimulation",
+    "seq": "Consecutive identical stimulus sequence",
+    "Dsu": "Session ID",
+    "Dsu2": "Participant ID",
+    "Sex": "Sex (M = Male, F = Female, self-reported)",
+    "Age": "Age (years)"
+  }
+}

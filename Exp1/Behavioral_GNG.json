@@ -7,6 +7,8 @@
     "resp": "Response, -99 indicates no response",
     "laten": "Onset of stimulus (in milliseconds)",
     "good": "Recording accuracy: 1 = correct, 0 = incorrect",
-    "SU": "Participant ID"
+    "SU": "Participant ID",
+    "Sex": "Sex (M = Male, F = Female, self-reported)",
+    "Age": "Age (years)"
   }
 }
