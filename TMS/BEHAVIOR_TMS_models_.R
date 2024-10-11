@@ -233,15 +233,7 @@ dat <- dump.format(list(Drt=data$rt, nT=Ntotal, Trt=Trt , Nsubj=Nsubj, idSub = d
                         Dtms51=data$Dtms51, DtmsA=data$DtmsA# , LR=0.37
                         ))
 
-
-# Run the function that fits the models using JAGS
-results_M3_lgn <- run.jags(model="model_M3_lgn_LR.txt",
-                           monitor=monitor, data=date, n.chains=3, 
-                           inits=c(inits1, inits2, inits3), plots = TRUE,
-                           burnin=2000, sample=1000, thin=5,
-                           modules=c("wiener"), method=c("parallel"))
-
-
+# partial data to find Learnig  Rate 
 # Run the function that fits the models using JAGS
 results_M3_DDM <- run.jags(model="model_M3_DDM_rl.txt",
                         monitor=monitor, data=dat, n.chains=3, 
@@ -256,11 +248,13 @@ for (s in 1:37){
   dataall$LRmode[dataall$Dsu==s] = M3LR_ps[13+s,6]
 }
 
-# Lper subjet 
+# LR per subjet 
 Trt = which(dataall$rt<1500 & dataall$rt>40 & dataall$est==10 & !dataall$T1)
 Tng = intersect(round(Trt+1),round(which(dataall$est==21)))
 NGO = as.numeric(dataall$est==21)
 Ntotal = length(dataall$rt)
+
+# AL darta to find all other parameters 
 date <- dump.format(list(Drt=dataall$rt, nT=Ntotal, Trt=Trt , Nsubj=Nsubj, idSub = dataall$Dsu2,
                          T1=dataall$T1, NGO=NGO,Tng=Tng,error=dataall$error,
                          Dseq=dataall$seq, Uno=dataall$Uno, pError=dataall$perror, Dtms=dataall$Dtms, 
@@ -454,52 +448,4 @@ MP_A + MP_B + PD_plot +plot_layout(design = layout) +
 
 
 
-
-#save.image("TMS_28022023.RData")
-
-# Tell JAGS which latent variables to monitor
-monitor = c('mubeta0','mubeta1', 'mubeta2','mubeta3', 'mubeta4','mubeta5', 'mubeta6','mubeta7', 'mubeta8',
-            'mubeta9', 'mubeta10','mubeta11',"muWi0","ta","muWi1","delt","deviance",
-            "muWi2","muWi3","muWi4","muWi5")#
-# data for JASG
-
-
-results_M3_log_2 <- run.jags(model="model_M3_DDM_log_2.txt",
-                           monitor=monitor, data=date, n.chains=3, 
-                           inits=c(inits1, inits2, inits3), plots = TRUE,
-                           burnin=2000, sample=1000, thin=5,
-                           modules=c("wiener"), method=c("parallel"))
-
-
-summary(results_M3_log_2)
-
-
-
-
-#
-chains = rbind(results_M3_log_2$mcmc[[1]], results_M3_log_2$mcmc[[2]], results_M3_log_2$mcmc[[3]])
-DIC = mean(chains[,"deviance"]) + (sd(chains[,"deviance"])^2)/2
-DIC # .29   -->  462531.4   ind --> 462431.3  --> 471518.3 log + DDM
-
-(pval = min(mean(chains[,"mubeta1"]<0)*2, mean(chains[,"mubeta1"]>0)*2))
-(pval = min(mean(chains[,"mubeta5"]<0)*2, mean(chains[,"mubeta5"]>0)*2))
-(pval = min(mean(chains[,"mubeta6"]<0)*2, mean(chains[,"mubeta6"]>0)*2))
-(pval = min(mean(chains[,"mubeta7"]<0)*2, mean(chains[,"mubeta7"]>0)*2))#.29 [1] 0.02666667
-
-(pval = min(mean(chains[,"muWi1"]<0)*2, mean(chains[,"muWi1"]>0)*2)) #.29 [1] 0.02666667
-(pval = min(mean(chains[,"muWi1"]<0)*2, mean(chains[,"muWi1"]>0)*2)) #.29 [1] 0.02666667
-
-(pval = min(mean((chains[,"muWi1"]*chains[,"mubeta7"])<0)*2,mean((chains[,"muWi1"]*chains[,"mubeta7"])>0)*2)) #.29 [1] 0.02666667
-mean(HDIofMCMC(chains[,"muWi1"]*chains[,"mubeta7"]))
-HDIofMCMC(chains[,"muWi1"]*chains[,"mubeta7"])
-
-(pval = min(mean((chains[,"muWi1"]*chains[,"mubeta1"])<0)*2,mean((chains[,"muWi1"]*chains[,"mubeta1"])>0)*2)) #.29 [1] 0.02666667
-mean(HDIofMCMC(chains[,"muWi1"]*chains[,"mubeta1"]))
-HDIofMCMC(chains[,"muWi1"]*chains[,"mubeta1"])
-
-(pval = min(mean((chains[,"muWi5"])<0)*2,mean((chains[,"muWi5"])>0)*2)) #.29 [1] 0.02666667
-mean(HDIofMCMC(chains[,"muWi5"]))
-HDIofMCMC(chains[,"muWi5"])
-
-save.image("TMS_24042024.RData")
 
