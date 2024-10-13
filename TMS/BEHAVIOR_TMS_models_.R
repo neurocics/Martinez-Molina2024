@@ -12,9 +12,7 @@ load.module("wiener")
 setwd("~/Documents/GitHub/Martinez-Molina2024/TMS")
 source("../HDIofMCMC.r") 
 
-# Draw random samples with JAGS
-#data <- read.table("COR.txt", header=TRUE,sep="\t")
-#data$Sub
+
 #write.csv(data[ , c(1:5, 7,8,9,10,11,13)], file="Behavioral_TMS.csv")
 data <- read.table("Behavioral_TMS.csv", header=TRUE,sep=",")
 

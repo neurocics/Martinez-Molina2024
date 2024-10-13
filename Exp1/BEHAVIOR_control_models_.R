@@ -613,10 +613,11 @@ for (i in 1:7232){
   RTpre2[i] = as.numeric(d[1])
 }
 
-
-
-
 RTreal = data$rt[Trt]
+
+#save(RTpre,RTreal,file="data_Supplementary_Figure_3.Rdata" )
+
+
 
 data2 <- data.frame(
   Value = c(RTpre, RTreal),
