@@ -60,4 +60,7 @@ The third experiment, involving Transcranial Magnetic Stimulation (TMS), is docu
 
 If you use this data or code, please cite the following paper:
 
-Martínez-Molina et al. (2024). *Lateral Prefrontal Theta Oscillations Causally Drive a Computational Mechanism Underlying Conflict Expectation and Adaptation*, *Nature Communications*.
+Martínez-Molina et al. (2024). 
+*Lateral Prefrontal Theta Oscillations Causally Drive a Computational Mechanism Underlying Conflict Expectation and Adaptation*, 
+*Nature Communications*.
+https://doi.org/10.1038/s41467-024-54244-8
